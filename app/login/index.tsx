@@ -1,7 +1,7 @@
 import {useAuthSession} from "@/providers/Auth";
 import Uuid from "expo-modules-core/src/uuid";
 import {ReactNode} from "react";
-import {Button, Text, TextInput, View} from "react-native";
+import {Button, Image, Text, TextInput, View} from "react-native";
 
 export default function Login(): ReactNode {
     const {signIn} = useAuthSession();
@@ -18,6 +18,9 @@ export default function Login(): ReactNode {
                 alignItems: "center",
             }}
         >
+            <Image
+                source={require("@/assets/images/login-full-logo.png")}
+            />
             <Text>Server URL:</Text>
             <TextInput
                 placeholder="Enter URL"
