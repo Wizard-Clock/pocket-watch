@@ -11,9 +11,10 @@ import {
     useRef,
     useState
 } from 'react';
+import {fetch} from 'expo/fetch';
 
 const AuthContext = createContext<{
-    signIn: (arg0: string) => void;
+    signIn: (arg0: string, user: { username: string; password: string }) => void;
     signOut: () => void
     token: RefObject<string | null> | null;
     isLoading: boolean
@@ -41,10 +42,25 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
         })()
     }, []);
 
-    const signIn = useCallback(async (token: string) => {
-        await AsyncStorage.setItem('@token', token);
-        tokenRef.current = token;
-        router.replace('/')
+    const signIn = useCallback(async (url: string, user: { username: string; password: string }) => {
+        console.log("hit");
+        const response = await fetch(url+"/api/login", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user),
+        });
+
+        if (response.ok) {
+            const token = await response.json();
+            console.log('response', response);
+            await AsyncStorage.setItem('@token', JSON.parse(token.json()));
+            tokenRef.current = token;
+            router.replace('/');
+        } else {
+            router.replace('/login');
+        }
     }, []);
 
     const signOut = useCallback(async () => {

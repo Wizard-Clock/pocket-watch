@@ -1,14 +1,15 @@
 import {useAuthSession} from "@/providers/Auth";
-import Uuid from "expo-modules-core/src/uuid";
-import {ReactNode} from "react";
+import {ReactNode, useState} from "react";
 import {TextInput} from 'react-native-paper';
 import {Button, Image, View} from "react-native";
 
 export default function Login(): ReactNode {
     const {signIn} = useAuthSession();
+    const [url, setURL] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const login = ():void => {
-        const random: string = Uuid.v4();
-        signIn(random);
+        signIn(url, {username, password});
     }
 
     return (
@@ -35,6 +36,8 @@ export default function Login(): ReactNode {
                 }}
                 mode="outlined"
                 label="Server URL"
+                onChangeText={newUrl => setURL(newUrl)}
+                defaultValue={url}
             />
             <TextInput
                 style={{
@@ -44,6 +47,8 @@ export default function Login(): ReactNode {
                 }}
                 mode="outlined"
                 label="Username"
+                onChangeText={newUsername => setUsername(newUsername)}
+                defaultValue={username}
             />
             <TextInput
                 style={{
@@ -55,6 +60,8 @@ export default function Login(): ReactNode {
                 mode="outlined"
                 label="Password"
                 secureTextEntry={true}
+                onChangeText={newPassword => setPassword(newPassword)}
+                defaultValue={password}
             />
             <Button
                 title="Log In"
