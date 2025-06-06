@@ -1,7 +1,8 @@
 import {useAuthSession} from "@/providers/Auth";
 import Uuid from "expo-modules-core/src/uuid";
 import {ReactNode} from "react";
-import {Button, Image, Text, TextInput, View} from "react-native";
+import {TextInput} from 'react-native-paper';
+import {Button, Image, View} from "react-native";
 
 export default function Login(): ReactNode {
     const {signIn} = useAuthSession();
@@ -14,27 +15,49 @@ export default function Login(): ReactNode {
         <View
             style={{
                 flex: 1,
-                justifyContent: "center",
+                justifyContent: "flex-start",
                 alignItems: "center",
             }}
         >
             <Image
+                style={{
+                    marginTop:200,
+                    height:60,
+                    width:350
+                }}
                 source={require("@/assets/images/login-full-logo.png")}
             />
-            <Text>Server URL:</Text>
             <TextInput
-                placeholder="Enter URL"
+                style={{
+                    marginTop: 30,
+                    width:320,
+                    height:40
+                }}
+                mode="outlined"
+                label="Server URL"
             />
-            <Text>Username:</Text>
             <TextInput
-                placeholder="Enter username"
+                style={{
+                    marginTop: 30,
+                    width:320,
+                    height:40
+                }}
+                mode="outlined"
+                label="Username"
             />
-            <Text>Password:</Text>
             <TextInput
+                style={{
+                    marginTop: 30,
+                    marginBottom:30,
+                    width:320,
+                    height:40
+                }}
+                mode="outlined"
+                label="Password"
                 secureTextEntry={true}
             />
             <Button
-                title={"Log In"}
+                title="Log In"
                 onPress={login}
             />
         </View>
