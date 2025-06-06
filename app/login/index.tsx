@@ -1,7 +1,7 @@
 import {useAuthSession} from "@/providers/Auth";
 import {ReactNode, useState} from "react";
-import {TextInput} from 'react-native-paper';
-import {Button, Image, View} from "react-native";
+import {TextInput, Button} from 'react-native-paper';
+import {Image, View} from "react-native";
 
 export default function Login(): ReactNode {
     const {signIn} = useAuthSession();
@@ -34,6 +34,7 @@ export default function Login(): ReactNode {
                     width:320,
                     height:40
                 }}
+                autoCapitalize="none"
                 mode="outlined"
                 label="Server URL"
                 onChangeText={newUrl => setURL(newUrl)}
@@ -64,9 +65,11 @@ export default function Login(): ReactNode {
                 defaultValue={password}
             />
             <Button
-                title="Log In"
+                mode="contained-tonal"
                 onPress={login}
-            />
+            >
+                Log In
+            </Button>
         </View>
     );
 }
