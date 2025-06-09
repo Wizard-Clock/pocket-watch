@@ -3,7 +3,7 @@ import {TextInput, Button, Text} from 'react-native-paper';
 import * as yup from 'yup';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import {Image, SafeAreaView} from "react-native";
+import {ActivityIndicator, Image, SafeAreaView} from "react-native";
 
 export default function Login() {
     let url;
@@ -33,10 +33,9 @@ export default function Login() {
             password: ''
         },
     });
-    const {signIn} = useAuthSession();
+    const {signIn, isLoading, genError} = useAuthSession();
     const onPressSend = (formData) => {
-        console.log(formData);
-        // signIn(url, {username, password});
+        signIn(formData.url, formData.username, formData.password);
     };
 
     return (
@@ -55,6 +54,8 @@ export default function Login() {
                 }}
                 source={require("@/assets/images/login-full-logo.png")}
             />
+            <ActivityIndicator animating={isLoading} size="large" />
+            {genError!=="" && <Text>{genError}</Text>}
             <Controller
                 control={control}
                 rules={{
@@ -70,6 +71,7 @@ export default function Login() {
                         autoCapitalize="none"
                         mode="outlined"
                         label="Server URL"
+                        disabled={isLoading}
                         onChangeText={onChange}
                         defaultValue={url}
                         value={value}
@@ -93,6 +95,7 @@ export default function Login() {
                         autoCapitalize="none"
                         mode="outlined"
                         label="Username"
+                        disabled={isLoading}
                         onChangeText={onChange}
                         defaultValue={username}
                         value={value}
@@ -117,6 +120,7 @@ export default function Login() {
                         mode="outlined"
                         label="Password"
                         secureTextEntry={true}
+                        disabled={isLoading}
                         onChangeText={onChange}
                         defaultValue={password}
                         value={value}
@@ -128,6 +132,7 @@ export default function Login() {
             <Button
                 style={{marginTop: 30}}
                 mode="contained-tonal"
+                disabled={isLoading}
                 onPress={handleSubmit(onPressSend)}
             >Log In</Button>
         </SafeAreaView>

@@ -14,15 +14,17 @@ import {
 import {fetch} from 'expo/fetch';
 
 const AuthContext = createContext<{
-    signIn: (arg0: string, user: { username: string; password: string }) => void;
+    signIn: (url: string, username: string, password: string) => void;
     signOut: () => void
     token: RefObject<string | null> | null;
     isLoading: boolean
+    genError: string
 }>({
     signIn: () => null,
     signOut: () => null,
     token: null,
-    isLoading: true
+    isLoading: false,
+    genError: "",
 });
 
 // Access the context as a hook
@@ -33,6 +35,7 @@ export function useAuthSession() {
 export default function AuthProvider({children}:{children: ReactNode}): ReactNode {
     const tokenRef = useRef<string|null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [genError, setGenError] = useState('');
 
     useEffect(() => {
         (async ():Promise<void> => {
@@ -42,23 +45,57 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
         })()
     }, []);
 
-    const signIn = useCallback(async (url: string, user: { username: string; password: string }) => {
-        console.log("hit");
-        const response = await fetch(url+"/api/login", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(user),
-        });
+    const signIn = useCallback(async (url: string, username: string, password: string) => {
+        setIsLoading(true);
+        setGenError('');
 
-        if (response.ok) {
-            const token = await response.json();
-            console.log('response', response);
-            await AsyncStorage.setItem('@token', JSON.parse(token.json()));
-            tokenRef.current = token;
-            router.replace('/');
-        } else {
+        //Setup Connection Timeout
+        let controller = new AbortController();
+        setTimeout(() => {controller.abort()}, 10000);
+
+        try {
+            // POST to server
+            const response = await fetch(url+"/api/login/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Access-Control-Allow-Origin': '*/',
+                    'Access-Control-Allow-Credentials': 'true'
+                },
+                body: JSON.stringify({username: username, password: password}),
+                signal: controller.signal
+            });
+
+            if (response.ok) {
+                const token = await response.json();
+                console.log('response', response);
+                await AsyncStorage.setItem('@token', JSON.parse(token.json()));
+                tokenRef.current = token;
+                setIsLoading(false);
+                router.replace('/');
+            } else {
+                switch (response.status) {
+                    case 401:
+                        setGenError('401: Invalid token.');
+                        break;
+                    case 404:
+                        setGenError('404: URL not found.');
+                        break;
+                }
+                console.log('response', response);
+                setIsLoading(false);
+                router.replace('/login');
+            }
+        } catch (err) {
+            setIsLoading(false);
+            if (err instanceof Error) {
+                console.log('error', err.name);
+                if (err.name.includes("AbortError")) {
+                    setGenError("Connection attempt took too long.");
+                } else {
+                    setGenError("Failed to Fetch.");
+                }
+            }
             router.replace('/login');
         }
     }, []);
@@ -75,7 +112,8 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                 signIn,
                 signOut,
                 token: tokenRef,
-                isLoading
+                isLoading,
+                genError
             }}
         >
             {children}
