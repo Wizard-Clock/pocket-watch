@@ -1,5 +1,7 @@
 /*https://medium.com/@david.ryan.hall/setting-up-a-basic-login-flow-for-an-expo-application-0b62b2b3e448*/
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import {router} from "expo-router";
 import {
     createContext,
@@ -39,8 +41,13 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
 
     useEffect(() => {
         (async ():Promise<void> => {
-            const token = await AsyncStorage.getItem('@token');
-            tokenRef.current = token || '';
+            let tokenUse = "";
+            if (Platform.OS === 'web') {
+                tokenUse = await AsyncStorage.getItem('@token');
+            } else { // mobile
+                tokenUse = await SecureStore.getItemAsync('@token');
+            }
+            tokenRef.current = tokenUse || '';
             setIsLoading(false);
         })()
     }, []);
@@ -52,25 +59,37 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
         //Setup Connection Timeout
         let controller = new AbortController();
         setTimeout(() => {controller.abort()}, 10000);
+        interface UserInterface {
+            username: string;
+            password: number;
+        }
+
+        const userObj: UserInterface = {
+            username: username,
+            password: password,
+        };
 
         try {
             // POST to server
-            const response = await fetch(url+"/api/login/", {
+            const response = await fetch(url+"/api/login", {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Access-Control-Allow-Origin': '*/',
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Credentials': 'true'
                 },
-                body: JSON.stringify({username: username, password: password}),
-                signal: controller.signal
+                body: JSON.stringify(userObj),
+                signal: controller.signal,
             });
 
             if (response.ok) {
-                const token = await response.json();
-                console.log('response', response);
-                await AsyncStorage.setItem('@token', JSON.parse(token.json()));
-                tokenRef.current = token;
+                const jsonToken = await response.json();
+                if (Platform.OS === 'web') {
+                    await AsyncStorage.setItem('@token', jsonToken.token);
+                } else { // mobile
+                    await SecureStore.setItemAsync('token', jsonToken.token);
+                }
+                tokenRef.current = jsonToken;
                 setIsLoading(false);
                 router.replace('/');
             } else {
@@ -82,14 +101,13 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                         setGenError('404: URL not found.');
                         break;
                 }
-                console.log('response', response);
                 setIsLoading(false);
                 router.replace('/login');
             }
         } catch (err) {
             setIsLoading(false);
             if (err instanceof Error) {
-                console.log('error', err.name);
+                console.log('error', err);
                 if (err.name.includes("AbortError")) {
                     setGenError("Connection attempt took too long.");
                 } else {
@@ -101,7 +119,11 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
     }, []);
 
     const signOut = useCallback(async () => {
-        await AsyncStorage.setItem('@token', '');
+        if (Platform.OS === 'web') {
+            await AsyncStorage.setItem('@token', '');
+        } else { // mobile
+            await SecureStore.deleteItemAsync('@token');
+        }
         tokenRef.current = null;
         router.replace('/login');
     }, []);

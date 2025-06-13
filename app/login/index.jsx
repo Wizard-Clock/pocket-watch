@@ -12,7 +12,6 @@ export default function Login() {
     const loginSchema = yup.object().shape({
         url: yup
             .string()
-            .url()
             .required('URL is required'),
         username: yup
             .string()
