@@ -41,7 +41,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
 
     useEffect(() => {
         (async ():Promise<void> => {
-            let tokenUse = "";
+            let tokenUse: string | null;
             if (Platform.OS === 'web') {
                 tokenUse = await AsyncStorage.getItem('@token');
             } else { // mobile
@@ -61,7 +61,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
         setTimeout(() => {controller.abort()}, 10000);
         interface UserInterface {
             username: string;
-            password: number;
+            password: string;
         }
 
         const userObj: UserInterface = {
