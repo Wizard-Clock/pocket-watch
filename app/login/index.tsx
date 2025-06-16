@@ -1,11 +1,12 @@
-import {useAuthSession} from "../../providers/Auth";
+import {useAuthSession} from "@/providers/Auth";
 import {TextInput, Button, Text} from 'react-native-paper';
 import * as yup from 'yup';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {ActivityIndicator, Image, SafeAreaView} from "react-native";
+import {ReactNode} from "react";
 
-export default function Login() {
+export default function Login(): ReactNode {
     let url;
     let username;
     let password;
@@ -33,7 +34,7 @@ export default function Login() {
         },
     });
     const {signIn, isLoading, genError} = useAuthSession();
-    const onPressSend = (formData) => {
+    const onPressSend = (formData: { url: string; username: string; password: string; }) => {
         signIn(formData.url, formData.username, formData.password);
     };
 
