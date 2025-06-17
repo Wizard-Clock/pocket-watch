@@ -1,4 +1,4 @@
-import {useAuthSession} from "@/providers/Auth";
+import {useAuthSession} from "@/providers/AuthService";
 import {TextInput, Button, Text} from 'react-native-paper';
 import * as yup from 'yup';
 import {useForm, Controller} from 'react-hook-form';

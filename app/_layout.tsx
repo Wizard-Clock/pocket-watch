@@ -1,4 +1,4 @@
-import AuthProvider from "@/providers/Auth";
+import AuthProvider from "@/providers/AuthService";
 import {Slot} from "expo-router";
 import {ReactNode, StrictMode} from "react";
 

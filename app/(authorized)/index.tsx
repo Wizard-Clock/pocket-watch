@@ -1,10 +1,10 @@
 import {useRouter} from 'expo-router';
 import {Appbar, Text} from 'react-native-paper';
-import {useAuthSession} from "@/providers/Auth";
+import {useAuthSession} from "@/providers/AuthService";
 import React from "react";
 import {SafeAreaView} from "react-native";
 
-export default function Home(){
+export default function HomePage(){
     const {signOut} = useAuthSession();
 
     return (

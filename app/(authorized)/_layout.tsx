@@ -1,4 +1,4 @@
-import {useAuthSession} from "@/providers/Auth";
+import {useAuthSession} from "@/providers/AuthService";
 import {Redirect, Stack} from 'expo-router';
 import {ActivityIndicator} from 'react-native-paper';
 import {ReactNode} from "react";
