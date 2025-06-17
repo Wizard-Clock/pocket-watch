@@ -1,7 +1,7 @@
 import {useAuthSession} from "@/providers/Auth";
 import {TextInput, Button, Text} from 'react-native-paper';
 import * as yup from 'yup';
-import { useForm, Controller } from 'react-hook-form';
+import {useForm, Controller} from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {ActivityIndicator, Image, SafeAreaView} from "react-native";
 import {ReactNode} from "react";

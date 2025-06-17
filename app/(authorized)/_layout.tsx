@@ -4,7 +4,7 @@ import {ActivityIndicator} from 'react-native-paper';
 import {ReactNode} from "react";
 
 export default function RootLayout(): ReactNode {
-    const {token, isLoading} = useAuthSession()
+    const {token, isLoading} = useAuthSession();
 
     if (isLoading) {
         return <ActivityIndicator animating={true} size={"large"}/>;
@@ -25,3 +25,4 @@ export default function RootLayout(): ReactNode {
         </Stack>
     );
 }
+

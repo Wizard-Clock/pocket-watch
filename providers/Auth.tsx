@@ -43,9 +43,9 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
         (async ():Promise<void> => {
             let tokenUse: string | null;
             if (Platform.OS === 'web') {
-                tokenUse = await AsyncStorage.getItem('@token');
+                tokenUse = await AsyncStorage.getItem('portkey');
             } else { // mobile
-                tokenUse = await SecureStore.getItemAsync('@token');
+                tokenUse = await SecureStore.getItemAsync('portkey');
             }
             tokenRef.current = tokenUse || '';
             setIsLoading(false);
@@ -85,7 +85,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
             if (response.ok) {
                 const jsonToken = await response.json();
                 if (Platform.OS === 'web') {
-                    await AsyncStorage.setItem('@token', jsonToken.token);
+                    await AsyncStorage.setItem('portkey', jsonToken.token);
                 } else { // mobile
                     await SecureStore.setItemAsync('token', jsonToken.token);
                 }
@@ -120,10 +120,11 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
 
     const signOut = useCallback(async () => {
         if (Platform.OS === 'web') {
-            await AsyncStorage.setItem('@token', '');
+            await AsyncStorage.setItem('portkey', '');
         } else { // mobile
-            await SecureStore.deleteItemAsync('@token');
+            await SecureStore.deleteItemAsync('portkey');
         }
+        setIsLoading(false);
         tokenRef.current = null;
         router.replace('/login');
     }, []);
