@@ -50,25 +50,30 @@ const APP_SETTINGS:any = {
 let instance:any = null;
 
 export default class SettingsService {
-    static getInstance() {
+    static async getInstance() {
         if (instance === null) {
             instance = new SettingsService({});
         }
         return instance;
     }
 
-    private readonly platform: string;
-    private appSettings: any;
+    private platform: string;
+    private appSettings: any = null;
     private settingConstants: any;
 
     constructor(props: any) {
         this.platform = Platform.OS.toLowerCase();
-        this._loadApplicationSettings();
+        this._loadApplicationSettings().then(r => console.log("_loadApplicationSettings doner"));
+
+        this.settingConstants = {
+            items: [],
+            map: {}
+        };
 
         const items = [].concat(APP_SETTINGS.common).concat(APP_SETTINGS[this.platform]);
         this.settingConstants.items = items;
         // Create a Map of Settings for speedy lookup.
-        items.forEach((item:any) => {
+        items.forEach((item: any) => {
             this.settingConstants.map[item.name] = item;
         });
     }
@@ -95,10 +100,20 @@ export default class SettingsService {
         return this.appSettings[name];
     }
 
+    /**
+     * Gets a single Application setting
+     * @param {String} name
+     */
+    getConstant(name:string) {
+        return this.settingConstants[name];
+    }
+
     getApplicationSettings(group:any) {
         if (group !== undefined) {
             let settings = [];
-            return APP_SETTINGS.filter((setting:any) => { return setting.group === group; });
+            let items = [].concat(APP_SETTINGS.common).concat(APP_SETTINGS[this.platform]);
+            console.log(items);
+            return items.filter((setting:any) => { return setting.group === group; });
         } else {
             return APP_SETTINGS;
         }
@@ -109,19 +124,22 @@ export default class SettingsService {
      * Load the application-settings from AsyncStorage
      * @param {Function} callback
      */
-    _loadApplicationSettings(callback?:Function) {
-        AsyncStorage.getItem(STORAGE_KEY + ":settings", (err, value) => {
+    async _loadApplicationSettings(callback?:Function) {
+        await AsyncStorage.clear();
+        await AsyncStorage.getItem(STORAGE_KEY + ":settings").then((value) => {
             if (value) {
                 this.appSettings = JSON.parse(value);
+                console.log('Settings loaded', this.appSettings);
             } else {
                 this.appSettings = this._getDefaultSettings();
+                console.log('Default settings loaded', this.appSettings);
                 this._saveSettings();
             }
 
             if (callback) {
                 callback(this.appSettings);
             }
-        });
+        })
     }
 
     /**
@@ -140,7 +158,7 @@ export default class SettingsService {
     /**
      * Persist the application settings to AsyncStorage
      */
-    _saveSettings() {
-        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
+    async _saveSettings() {
+        await AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
     }
 }

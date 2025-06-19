@@ -8,10 +8,12 @@ const LOCATION_TASK_NAME = "HOUSE_ELF_SERVICE";
 
 const LocationContext = createContext<{
     toggleLocationService: () => void
+    updateLocationConfig: () => void
     locationStarted: boolean
     locationIcon: string;
 }>({
     toggleLocationService: () => null,
+    updateLocationConfig: () => null,
     locationStarted: false,
     locationIcon: "",
 });
@@ -131,5 +133,34 @@ export default function LocationService() {
         setLocationStarted(value);
         setLocationIcon(value ? 'play-circle' : 'stop-circle');
         console.log('tracking started?', value);
+    }
+
+    const updateLocationConfig = () => {
+        BackgroundGeolocation.setConfig({
+            // Geolocation Config
+            desiredAccuracy: settingsService.get("desiredAccuracy"),
+            distanceFilter: settingsService.get("distanceFilter"),
+            // Application config
+            debug: settingsService.get("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
+            logLevel: settingsService.get("logLevel"),
+            stopOnTerminate: settingsService.get("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
+            startOnBoot: settingsService.get("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
+            enableHeadless: settingsService.get("enableHeadless"),
+            heartbeatInterval: settingsService.get("heartbeatInterval"),
+            // HTTP / SQLite config
+            url: settingsService.get("url") + "/api/updateUserLocation",
+            headers: {              // <-- Optional HTTP headers
+                "Content-Type": "application/x-www-form-urlencoded",
+                "bearer": token
+            },
+            locationTemplate: '{Location: {"latitude":<%= latitude %>,"longitude":<%= longitude %>}}',
+            // Authorization
+            locationAuthorizationRequest: 'Always',
+            backgroundPermissionRationale: {
+                title: "Allow access to this device's location in the background?",
+                message: "In order to allow your house elf to follow you, please enable 'Allow all the time permission",
+                positiveAction: "Change to Allow all the time"
+            }
+        }).then(result => console.log("- BackgroundGeolocation configuration updated"));
     }
 }
