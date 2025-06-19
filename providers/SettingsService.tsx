@@ -1,96 +1,30 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from "react-native";
+import * as Location from "expo-location";
 
 const STORAGE_KEY:string = "pocket-watch";
 
 const APP_SETTINGS:any = {
     common: [
-        // Geolocation
-        // {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
-        //         {label: 'NAVIGATION', value: BackgroundGeolocation.DESIRED_ACCURACY_NAVIGATION},
-        //         {label: 'HIGH', value: BackgroundGeolocation.DESIRED_ACCURACY_HIGH},
-        //         {label: 'MEDIUM', value: BackgroundGeolocation.DESIRED_ACCURACY_MEDIUM},
-        //         {label: 'LOW', value: BackgroundGeolocation.DESIRED_ACCURACY_LOW},
-        //         {label: 'MINIMUM', value: BackgroundGeolocation.DESIRED_ACCURACY_VERY_LOW},
-        //         {label: 'LOWEST', value: BackgroundGeolocation.DESIRED_ACCURACY_LOWEST}
-        //     ], defaultValue: BackgroundGeolocation.DESIRED_ACCURACY_NAVIGATION },
-        {name: 'distanceFilter', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 10, 20, 50, 100, 500], defaultValue: 20 },
-        {name: 'disableElasticity', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'elasticityMultiplier', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 1, 2, 3, 5, 10], defaultValue: 1},
-        {name: 'geofenceProximityRadius', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [1000, 1500, 2000, 5000, 10000, 100000], defaultValue: 1000 },
-        {name: 'stopAfterElapsedMinutes', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [-1, 0, 1, 2, 5, 10, 15], defaultValue: 0},
-        {name: 'desiredOdometerAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [10, 20, 50, 100, 500], defaultValue: 100},
-        {name: 'useSignificantChangesOnly', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'disableLocationAuthorizationAlert', group: 'application', dataType: 'boolean', inputType: 'toggle', values: ['true', 'false'], defaultValue: 'false'},
-        {name: 'showsBackgroundLocationIndicator', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        // Activity Recognition
-        {name: 'stopTimeout', group: 'activity recognition', dataType: 'integer', inputType: 'select', values: [0, 1, 5, 10, 15], defaultValue: 1},
-        {name: 'disableMotionActivityUpdates', group: 'activity recognition', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'disableStopDetection', group: 'activity recognition', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-
-        // HTTP & Persistence
-        {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://your.server.com'},
-        {name: 'autoSync', group: 'http', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        {name: 'disableAutoSyncOnCellular', group: 'http', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'autoSyncThreshold', group: 'http', dataType: 'integer', inputType: 'select', values: [0, 5, 10, 25, 50, 100], defaultValue: 0},
-        {name: 'batchSync', group: 'http', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'maxBatchSize', group: 'http', dataType: 'integer', inputType: 'select', values: [-1, 50, 100, 250, 500], defaultValue: 250},
-        {name: 'maxRecordsToPersist', group: 'http', dataType: 'integer', inputType: 'select', values: [-1, 0, 1, 10, 100, 1000], defaultValue: -1},
-        {name: 'maxDaysToPersist', group: 'http', dataType: 'integer', inputType: 'select', values: [-1, 1, 2, 3, 5, 7, 14], defaultValue: 2},
-        {name: 'persistMode', group: 'http', dataType: 'integer', inputType: 'select', values: [
-                {label: 'PERSIST_MODE_ALL', value: 2},
-                {label: 'PERSIST_MODE_LOCATION', value: 1},
-                {label: 'PERSIST_MODE_GEOFENCE', value: -1},
-                {label: 'PERSIST_MODE_NONE', value: 0},
-            ], defaultValue: 2},
-        // Application
-        {name: 'stopOnTerminate', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'startOnBoot', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        {name: 'heartbeatInterval', group: 'application', dataType: 'integer', inputType: 'select', values: [-1, 60, (2*60), (5*60), (15*60)], defaultValue: 60},
-        // Logging & Debug
-        {name: 'debug', group: 'debug', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        {name: 'logLevel', group: 'debug', dataType: 'string', inputType: 'select', values:[
-                {label: 'OFF', value: 0},
-                {label: 'ERROR', value: 1},
-                {label: 'WARN', value: 2},
-                {label: 'INFO', value: 3},
-                {label: 'DEBUG', value: 4},
-                {label: 'VERBOSE', value: 5}
-            ], defaultValue: 3},
-        {name: 'logMaxDays', group: 'debug', dataType: 'integer', inputType: 'select', values: [1, 2, 3, 4, 5, 6, 7], defaultValue: 3}
-    ],
+        // Location manager accuracy. Pass one of Accuracy enum values.
+        // For low-accuracies the implementation can avoid geolocation providers that consume a significant amount of power (such as GPS).
+        {name: 'accuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
+                {label: 'Lowest', value: Location.Accuracy.Lowest,            description:'Accurate to the nearest three kilometers.'},
+                {label: 'Lowest', value: Location.Accuracy.Low,               description:'Accurate to the nearest kilometer.'},
+                {label: 'Lowest', value: Location.Accuracy.Balanced,          description:'Accurate to within one hundred meters.'},
+                {label: 'Lowest', value: Location.Accuracy.High,              description:'Accurate to within ten meters of the desired target.'},
+                {label: 'Lowest', value: Location.Accuracy.Highest,           description:'The best level of accuracy available.'}
+            ], defaultValue: Location.Accuracy.High},
+        // Receive updates only when the location has changed by at least this distance in meters. Default value may depend on accuracy option.
+        {name: 'distanceInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0,10,50,100,150,200], defaultValue: 50},
+],
     ios: [
-        // Geolocation
-        {name: 'stationaryRadius', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 25, 50, 100, 500, 1000, 5000], defaultValue: 25 },
-        // {name: 'activityType', group: 'geolocation', dataType: 'string', inputType: 'select', values: [
-        //         {label: 'OTHER', value: BackgroundGeolocation.ACTIVITY_TYPE_OTHER},
-        //         {label: 'AUTOMOTIVE_NAVIGATION',value: BackgroundGeolocation.ACTIVITY_TYPE_AUTOMOTIVE_NAVIGATION},
-        //         {label: 'FITNESS', value: BackgroundGeolocation.ACTIVITY_TYPE_FITNESS},
-        //         {label: 'OTHER_NAVIGATION', value: BackgroundGeolocation.ACTIVITY_TYPE_OTHER_NAVIGATION}
-        //     ], defaultValue: BackgroundGeolocation.ACTIVITY_TYPE_OTHER_NAVIGATION},
-        // Application
-        {name: 'preventSuspend', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        // Activity Recognition
-        {name: 'stopDetectionDelay', group: 'activity recognition', dataType: 'integer', inputType: 'select', values: [0, 1, 5, 10, 15], defaultValue: 0}
+        // A boolean indicating whether the status bar changes its appearance when location services are used in the background.
+        {name: 'showsBackgroundLocationIndicator', group: 'notification', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
     ],
     android: [
-        // Geolocation
-        {name: 'locationUpdateInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 1000, 5000, 10000, 30000, 60000], defaultValue: 5000},
-        {name: 'fastestLocationUpdateInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [-1, 0, 1000, 5000, 10000, 30000, 60000], defaultValue: 1000},
-        {name: 'deferTime', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, (10*1000), (30*1000), (60*1000), (5*60*1000)], defaultValue: 0},
-        {name: 'geofenceModeHighAccuracy', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', value: [true, false], defaultValue: true},
-        // Activity Recognition
-        {name: 'motionTriggerDelay', group: 'activity recognition', dataType: 'integer', inputType: 'select', values: [0, 10000, 30000, 60000], defaultValue: 0},
-        //{name: 'triggerActivities', group: 'activity recognition', dataType: 'string', inputType: 'select', values: ['in_vehicle', 'on_bicycle', 'on_foot', 'running', 'walking'], defaultValue: 'in_vehicle, on_bicycle, running, walking, on_foot'},
-        // Application
-        {name: 'enableHeadless', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        // {name: 'notificationPriority', group: 'application', dataType: 'integer', inputType: 'select', values: [
-        //         {label:'DEFAULT', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_DEFAULT},
-        //         {label:'HIGH', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_HIGH},
-        //         {label:'LOW', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_LOW},
-        //         {label:'MAX', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_MAX},
-        //         {label:'MIN', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_MIN}
-        //     ], defaultValue: BackgroundGeolocation.NOTIFICATION_PRIORITY_DEFAULT}
+        // Minimum time to wait between each update in milliseconds. Default value may depend on accuracy option.
+        {name: 'timeInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0,30,60,120,300,1800,3600], defaultValue: 120},
     ]
 };
 
@@ -109,10 +43,68 @@ export default class SettingsService {
 
     constructor(props: any) {
         this.platform = Platform.OS.toLowerCase();
-        this.loadApplicationSettings();
+        this._loadApplicationSettings();
     }
 
-    loadApplicationSettings() {
-        throw new Error('Method not implemented.');
+    /**
+     * Sets and persists a single Application setting
+     * @param {String} name
+     * @param {Mixed} value
+     */
+    set(name:string, value:any) {
+        if (this.appSettings[name] === value) {
+            // No change.  Ignore
+            return;
+        }
+        this.appSettings[name] = value;
+        this._saveSettings();
+    }
+
+    /**
+     * Sets and persists a single Application setting
+     * @param {String} name
+     * @param {Mixed} value
+     */
+    get(name:string) {
+        return this.appSettings[name];
+    }
+
+    /**
+     * Load the application-settings from AsyncStorage
+     * @param {Function} callback
+     */
+    _loadApplicationSettings(callback?:Function) {
+        AsyncStorage.getItem(STORAGE_KEY + ":settings", (err, value) => {
+            if (value) {
+                this.appSettings = JSON.parse(value);
+            } else {
+                this.appSettings = this._getDefaultSettings();
+                this._saveSettings();
+            }
+
+            if (callback) {
+                callback(this.appSettings);
+            }
+        });
+    }
+
+    /**
+     * Returns the default application-settings {}
+     * @return {Object}
+     */
+    _getDefaultSettings(): object {
+        let state:any = {};
+        const items = [].concat(APP_SETTINGS.common).concat(APP_SETTINGS[this.platform]);
+        items.forEach((setting:any) => {
+            state[setting.name] = setting.defaultValue;
+        });
+        return state;
+    }
+
+    /**
+     * Persist the application settings to AsyncStorage
+     */
+    _saveSettings() {
+        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
     }
 }

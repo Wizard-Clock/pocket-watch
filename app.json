@@ -16,13 +16,7 @@
         "NSMotionUsageDescription": "Pocket Watch uses motion-detection to determine when the device is in motion.",
         "UIBackgroundModes": [
           "location",
-          "fetch",
-          "processing",
-          "audio"
-        ],
-        "BGTaskSchedulerPermittedIdentifiers": [
-          "com.transistorsoft.fetch",
-          "com.transistorsoft.customtask"
+          "fetch"
         ]
       }
     },
@@ -31,8 +25,14 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#F1EDE4"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.siriusfeely.pocketwatch"
+      "package": "com.siriusfeely.pocketwatch",
+      "permissions": [
+          "ACCESS_COARSE_LOCATION",
+          "ACCESS_FINE_LOCATION",
+          "ACCESS_BACKGROUND_LOCATION",
+          "FOREGROUND_SERVICE",
+          "FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -48,6 +48,12 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#F1EDE4"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
       ]
     ],
