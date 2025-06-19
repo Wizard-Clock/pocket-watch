@@ -1,21 +1,16 @@
 import {createContext, useContext, useEffect, useState} from "react"
-import * as TaskManager from "expo-task-manager"
-import * as Location from "expo-location"
 import SettingsService from "@/providers/SettingsService"
-import {Colors} from "@/providers/ColorService"
+import {useAuthSession} from "@/providers/AuthService";
+import BackgroundGeolocation, { Subscription } from "react-native-background-geolocation";
+import BackgroundFetch from "react-native-background-fetch";
 
 const LOCATION_TASK_NAME = "HOUSE_ELF_SERVICE";
-const [position, setPosition] = useState(null);
 
-const AuthContext = createContext<{
-    startLocation: () => void
-    stopLocation: () => void
+const LocationContext = createContext<{
     toggleLocationService: () => void
     locationStarted: boolean
     locationIcon: string;
 }>({
-    startLocation: () => null,
-    stopLocation: () => null,
     toggleLocationService: () => null,
     locationStarted: false,
     locationIcon: "",
@@ -23,88 +18,113 @@ const AuthContext = createContext<{
 
 // Access the context as a hook
 export function useLocationSession() {
-    return useContext(AuthContext);
+    return useContext(LocationContext);
 }
 
 export default function LocationService() {
     const settingsService = SettingsService.getInstance();
+    const {token} = useAuthSession();
     //Other options = stop-circle
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
+    const [enabled, setEnabled] = useState(false);
+    const [position, setPosition] = useState('');
 
     useEffect(() => {
-        const config = async () => {
-            let foregroundPermission = await Location.requestForegroundPermissionsAsync();
-            let backgroundPermission = await Location.requestBackgroundPermissionsAsync();
-            if (foregroundPermission.status != 'granted' && backgroundPermission.status !== 'granted') {
-                console.log('Permission to access location was denied');
-            } else {
-                console.log('Permission to access location granted');
+        const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
+            console.log('[onLocation]', location);
+            setPosition(JSON.stringify(location, null, 2));
+        })
+
+        BackgroundGeolocation.ready({
+            // Geolocation Config
+            desiredAccuracy: settingsService.get("desiredAccuracy"),
+            distanceFilter: settingsService.get("distanceFilter"),
+            // Application config
+            debug: settingsService.get("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
+            logLevel: settingsService.get("logLevel"),
+            stopOnTerminate: settingsService.get("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
+            startOnBoot: settingsService.get("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
+            enableHeadless: settingsService.get("enableHeadless"),
+            heartbeatInterval: settingsService.get("heartbeatInterval"),
+            // HTTP / SQLite config
+            url: settingsService.get("url") + "/api/updateUserLocation",
+            headers: {              // <-- Optional HTTP headers
+                "Content-Type": "application/x-www-form-urlencoded",
+                "bearer": token
+            },
+            locationTemplate: '{Location: {"latitude":<%= latitude %>,"longitude":<%= longitude %>}}',
+            // Authorization
+            locationAuthorizationRequest: 'Always',
+            backgroundPermissionRationale: {
+                title: "Allow access to this device's location in the background?",
+                message: "In order to allow your house elf to follow you, please enable 'Allow all the time permission",
+                positiveAction: "Change to Allow all the time"
             }
-        };
-        config();
+        }).then((state) => {
+            setEnabled(state.enabled)
+            console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
+        });
+
+        const heartbeatSubscriber:any = BackgroundGeolocation.onHeartbeat(async (event) => {
+            const taskId = await BackgroundGeolocation.startBackgroundTask();
+            try {
+                const location = await BackgroundGeolocation.getCurrentPosition({
+                    samples: 2,
+                    timeout: 10,
+                    extras: {
+                        "event": "heartbeat"
+                    }
+                });
+                console.log('[heartbeat] getCurrentPosition', location);
+            } catch(error) {
+                console.log('[getCurrentPosition] ERROR: ', error);
+            }
+            BackgroundGeolocation.stopBackgroundTask(taskId);
+        });
+
+        initBackgroundFetch();
+        return () => {
+            // Remove BackgroundGeolocation event-subscribers when the View is removed or refreshed
+            // during development live-reload.  Without this, event-listeners will accumulate with
+            // each refresh during live-reload.
+            onLocation.remove();
+        }
     }, []);
 
-    const startLocationTracking = async () => {
-        if (settingsService.platform === "android") {
-            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-                accuracy: settingsService.get("accuracy"),
-                distanceInterval: settingsService.get("distanceInterval"),
-                timeInterval: settingsService.get("timeInterval"),
-                foregroundService: {
-                    notificationTitle: "Pocket Watch",
-                    notificationBody: "Dobby keeping tabs in background",
-                    notificationColor: Colors.accent,
-                }
+    const initBackgroundFetch = async() => {
+        BackgroundFetch.configure({
+            minimumFetchInterval: 15,
+            enableHeadless: true,
+            stopOnTerminate: false
+        }, async (taskId) => {
+            console.log('[BackgroundFetch]', taskId);
+            const location = await BackgroundGeolocation.getCurrentPosition({
+                extras: {
+                    "event": "background-fetch"
+                },
+                maximumAge: 10000,
+                persist: true,
+                timeout: 30,
+                samples: 2
             });
-        } else if (settingsService.platform === "ios") {
-            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-                accuracy: settingsService.get("accuracy"),
-                distanceInterval: settingsService.get("distanceInterval"),
-                showsBackgroundLocationIndicator: settingsService.get("showsBackgroundLocationIndicator"),
-                foregroundService: {
-                    notificationTitle: "Pocket Watch",
-                    notificationBody: "Dobby keeping tabs in background",
-                    notificationColor: Colors.accent,
-                }
-            });
-        } else {
-            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-                accuracy: settingsService.get("accuracy"),
-                distanceInterval: settingsService.get("distanceInterval"),
-                foregroundService: {
-                    notificationTitle: "Pocket Watch",
-                    notificationBody: "Dobby keeping tabs in background",
-                    notificationColor: Colors.accent,
-                }
-            });
-        }
-        const hasStarted = await Location.hasStartedLocationUpdatesAsync(
-            LOCATION_TASK_NAME
-        );
-        setLocationServiceState(hasStarted);
-    };
+            console.log('[getCurrentPosition]', location);
+            BackgroundFetch.finish(taskId);
+        }, async (taskId) => {
+            console.log('[BackgroundFetch] TIMEOUT:', taskId);
+            BackgroundFetch.finish(taskId);
+        });
+    }
 
     const toggleLocationService = () => {
-      if (locationStarted) {
-          stopLocation();
-      } else {
-          startLocation();
-      }
-    }
-
-    const startLocation = () => {
-        startLocationTracking();
-    }
-
-    const stopLocation = () => {
-        setLocationServiceState(false);
-        TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME)
-            .then((tracking) => {
-                if (tracking) {
-                    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-                }
-            })
+        console.log("Toggle location service");
+        if (locationStarted) {
+            BackgroundGeolocation.stop();
+            setLocationServiceState(false);
+        } else {
+            BackgroundGeolocation.start();
+            setLocationServiceState(true);
+        }
     }
 
     const setLocationServiceState = (value:boolean) => {
@@ -113,22 +133,3 @@ export default function LocationService() {
         console.log('tracking started?', value);
     }
 }
-
-// Define the background task for location tracking
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
-    if (error) {
-        console.log('LOCATION_TRACKING task ERROR:', error);
-        return;
-    }
-    if (data) {
-        // @ts-ignore
-        const { locations } = data;
-        let lat = locations[0].coords.latitude;
-        let long = locations[0].coords.longitude;
-
-        setPosition(locations[0]);
-
-        // @ts-ignore
-        console.log(`${new Date(Date.now()).toLocaleString()}: ${position.coords}`);
-    }
-});

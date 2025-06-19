@@ -1,30 +1,49 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from "react-native";
-import * as Location from "expo-location";
+import BackgroundGeolocation from "react-native-background-geolocation";
 
 const STORAGE_KEY:string = "pocket-watch";
 
 const APP_SETTINGS:any = {
     common: [
-        // Location manager accuracy. Pass one of Accuracy enum values.
-        // For low-accuracies the implementation can avoid geolocation providers that consume a significant amount of power (such as GPS).
-        {name: 'accuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
-                {label: 'Lowest', value: Location.Accuracy.Lowest,            description:'Accurate to the nearest three kilometers.'},
-                {label: 'Lowest', value: Location.Accuracy.Low,               description:'Accurate to the nearest kilometer.'},
-                {label: 'Lowest', value: Location.Accuracy.Balanced,          description:'Accurate to within one hundred meters.'},
-                {label: 'Lowest', value: Location.Accuracy.High,              description:'Accurate to within ten meters of the desired target.'},
-                {label: 'Lowest', value: Location.Accuracy.Highest,           description:'The best level of accuracy available.'}
-            ], defaultValue: Location.Accuracy.High},
-        // Receive updates only when the location has changed by at least this distance in meters. Default value may depend on accuracy option.
-        {name: 'distanceInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0,10,50,100,150,200], defaultValue: 50},
-],
+        {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://your.server.com/endpoint'},
+        {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
+                {label: 'HIGH', value: BackgroundGeolocation.DESIRED_ACCURACY_HIGH, description: "Highest power; highest accuracy."},
+                {label: 'MEDIUM', value: BackgroundGeolocation.DESIRED_ACCURACY_MEDIUM, description: "Medium power; Medium accuracy;"},
+                {label: 'LOW', value: BackgroundGeolocation.DESIRED_ACCURACY_LOW, description:"Lower power."},
+                {label: 'MINIMUM', value: BackgroundGeolocation.DESIRED_ACCURACY_VERY_LOW, description:"Lowest power; lowest accuracy."},
+            ], defaultValue: BackgroundGeolocation.DESIRED_ACCURACY_HIGH },
+        {name: 'distanceFilter', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 10, 20, 50, 100, 500], defaultValue: 20},
+        {name: 'useSignificantChangesOnly', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
+        // Application
+        {name: 'stopOnTerminate', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
+        {name: 'startOnBoot', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
+        {name: 'heartbeatInterval', group: 'application', dataType: 'integer', inputType: 'select', values: [-1, 60, (2*60), (5*60), (15*60)], defaultValue: 60},
+        // Logging & Debug
+        {name: 'debug', group: 'debug', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
+        {name: 'logLevel', group: 'debug', dataType: 'string', inputType: 'select', values:[
+                {label: 'OFF', value: 0},
+                {label: 'ERROR', value: 1},
+                {label: 'WARN', value: 2},
+                {label: 'INFO', value: 3},
+                {label: 'DEBUG', value: 4},
+                {label: 'VERBOSE', value: 5}
+            ], defaultValue: 5},
+        {name: 'logMaxDays', group: 'debug', dataType: 'integer', inputType: 'select', values: [1, 2, 3, 4, 5, 6, 7], defaultValue: 3}
+    ],
     ios: [
-        // A boolean indicating whether the status bar changes its appearance when location services are used in the background.
-        {name: 'showsBackgroundLocationIndicator', group: 'notification', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
+        {name: 'preventSuspend', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
     ],
     android: [
-        // Minimum time to wait between each update in milliseconds. Default value may depend on accuracy option.
-        {name: 'timeInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0,30,60,120,300,1800,3600], defaultValue: 120},
+        // Application
+        {name: 'enableHeadless', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
+        {name: 'notificationPriority', group: 'application', dataType: 'integer', inputType: 'select', values: [
+                {label:'DEFAULT', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_DEFAULT},
+                {label:'HIGH', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_HIGH},
+                {label:'LOW', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_LOW},
+                {label:'MAX', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_MAX},
+                {label:'MIN', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_MIN}
+            ], defaultValue: BackgroundGeolocation.NOTIFICATION_PRIORITY_DEFAULT}
     ]
 };
 
@@ -40,10 +59,18 @@ export default class SettingsService {
 
     private readonly platform: string;
     private appSettings: any;
+    private settingConstants: any;
 
     constructor(props: any) {
         this.platform = Platform.OS.toLowerCase();
         this._loadApplicationSettings();
+
+        const items = [].concat(APP_SETTINGS.common).concat(APP_SETTINGS[this.platform]);
+        this.settingConstants.items = items;
+        // Create a Map of Settings for speedy lookup.
+        items.forEach((item:any) => {
+            this.settingConstants.map[item.name] = item;
+        });
     }
 
     /**
@@ -61,13 +88,22 @@ export default class SettingsService {
     }
 
     /**
-     * Sets and persists a single Application setting
+     * Gets a single Application setting
      * @param {String} name
-     * @param {Mixed} value
      */
     get(name:string) {
         return this.appSettings[name];
     }
+
+    getApplicationSettings(group:any) {
+        if (group !== undefined) {
+            let settings = [];
+            return APP_SETTINGS.filter((setting:any) => { return setting.group === group; });
+        } else {
+            return APP_SETTINGS;
+        }
+    }
+
 
     /**
      * Load the application-settings from AsyncStorage

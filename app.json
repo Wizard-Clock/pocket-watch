@@ -16,7 +16,12 @@
         "NSMotionUsageDescription": "Pocket Watch uses motion-detection to determine when the device is in motion.",
         "UIBackgroundModes": [
           "location",
-          "fetch"
+          "fetch",
+          "processing"
+        ],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.transistorsoft.fetch",
+          "com.transistorsoft.customtask"
         ]
       }
     },
@@ -51,11 +56,17 @@
         }
       ],
       [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        "react-native-background-geolocation", {
+          "license": "YOUR_LICENSE_KEY_HERE"
         }
-      ]
+      ],
+      [
+        "expo-gradle-ext-vars", {
+          "googlePlayServicesLocationVersion": "21.1.0",
+          "appCompatVersion": "1.4.2"
+        }
+      ],
+      "react-native-background-fetch"
     ],
     "experiments": {
       "typedRoutes": true
