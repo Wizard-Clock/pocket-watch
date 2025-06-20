@@ -8,10 +8,10 @@ const APP_SETTINGS:any = {
     common: [
         {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://your.server.com/endpoint'},
         {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
-                {label: 'HIGH', value: BackgroundGeolocation.DESIRED_ACCURACY_HIGH, description: "Highest power; highest accuracy."},
-                {label: 'MEDIUM', value: BackgroundGeolocation.DESIRED_ACCURACY_MEDIUM, description: "Medium power; Medium accuracy;"},
-                {label: 'LOW', value: BackgroundGeolocation.DESIRED_ACCURACY_LOW, description:"Lower power."},
-                {label: 'MINIMUM', value: BackgroundGeolocation.DESIRED_ACCURACY_VERY_LOW, description:"Lowest power; lowest accuracy."},
+                {label: 'HIGH', value: BackgroundGeolocation.DESIRED_ACCURACY_HIGH},
+                {label: 'MEDIUM', value: BackgroundGeolocation.DESIRED_ACCURACY_MEDIUM},
+                {label: 'LOW', value: BackgroundGeolocation.DESIRED_ACCURACY_LOW},
+                {label: 'MINIMUM', value: BackgroundGeolocation.DESIRED_ACCURACY_VERY_LOW},
             ], defaultValue: BackgroundGeolocation.DESIRED_ACCURACY_HIGH },
         {name: 'distanceFilter', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 10, 20, 50, 100, 500], defaultValue: 20},
         {name: 'useSignificantChangesOnly', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
@@ -50,7 +50,7 @@ const APP_SETTINGS:any = {
 let instance:any = null;
 
 export default class SettingsService {
-    static async getInstance() {
+    static getInstance() {
         if (instance === null) {
             instance = new SettingsService({});
         }
@@ -96,7 +96,7 @@ export default class SettingsService {
      * Gets a single Application setting
      * @param {String} name
      */
-    get(name:string) {
+    getSettingValue(name:string) {
         return this.appSettings[name];
     }
 
@@ -112,7 +112,6 @@ export default class SettingsService {
         if (group !== undefined) {
             let settings = [];
             let items = [].concat(APP_SETTINGS.common).concat(APP_SETTINGS[this.platform]);
-            console.log(items);
             return items.filter((setting:any) => { return setting.group === group; });
         } else {
             return APP_SETTINGS;
@@ -129,10 +128,8 @@ export default class SettingsService {
         await AsyncStorage.getItem(STORAGE_KEY + ":settings").then((value) => {
             if (value) {
                 this.appSettings = JSON.parse(value);
-                console.log('Settings loaded', this.appSettings);
             } else {
                 this.appSettings = this._getDefaultSettings();
-                console.log('Default settings loaded', this.appSettings);
                 this._saveSettings();
             }
 
@@ -158,7 +155,7 @@ export default class SettingsService {
     /**
      * Persist the application settings to AsyncStorage
      */
-    async _saveSettings() {
-        await AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
+    _saveSettings() {
+        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
     }
 }

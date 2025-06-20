@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Appbar, Switch, Text, TextInput} from 'react-native-paper'
 import {useRouter} from "expo-router";
 import {useAuthSession} from "@/providers/AuthService";
@@ -8,10 +8,10 @@ import SettingsService from "@/providers/SettingsService";
 import { Dropdown } from 'react-native-element-dropdown';
 import {ListItem} from "react-native-elements";
 
-export default async function SettingsPage() {
+export default function SettingsPage() {
     const {signOut} = useAuthSession();
     const locationSession = useLocationSession();
-    const settingsService = await SettingsService.getInstance();
+    const settingsService = SettingsService.getInstance();
 
     const renderPluginSettings = (category:string) => {
         return settingsService.getApplicationSettings(category).map((setting:any, i: any) => {
@@ -33,12 +33,12 @@ export default async function SettingsPage() {
     const buildInputField = (setting:any, i:number, onChangeCallback:Function) => {
         console.log("buildInputField");
         console.log(setting);
-        console.log(settingsService.get(setting.name));
+        console.log(settingsService.getSettingValue(setting.name));
         return (
             <ListItem key={setting.name} bottomDivider>
                 <TextInput
                     label={setting.name}
-                    value={settingsService.get(setting.name).value}
+                    value={settingsService.getSettingValue(setting.name)}
                     onChangeText={(value) => onChangeCallback(setting.name, value)}
                     keyboardType="default"
                     autoCapitalize="none"
@@ -51,14 +51,18 @@ export default async function SettingsPage() {
 
     /// Render <Switch /> Field
     const buildSwitchField = (setting:any, i:number, onChangeCallback:Function) => {
-        console.log("buildSwitchField");
-        console.log(setting.name);
-        console.log(settingsService.get(setting.name));
+        const [switchValue, setSwitchValue] = useState(settingsService.getSettingValue(setting.name));
         return (
             <ListItem key={setting.name} bottomDivider>
                 <ListItem.Content style={{flexDirection: 'row', alignItems: 'center', paddingTop: 5, paddingBottom:5}}>
                     <ListItem.Title>{setting.name}</ListItem.Title>
-                    <Switch onValueChange={(value) => onChangeCallback(setting.name, value)} value={settingsService.get(setting.name).value} />
+                    <Switch
+                        value={switchValue}
+                        onValueChange={(value) => {
+                            onChangeCallback(setting.name, value);
+                            setSwitchValue(value);
+                        }}
+                    />
                 </ListItem.Content>
             </ListItem>
         );
@@ -67,19 +71,17 @@ export default async function SettingsPage() {
     /// Render <DropDownPicker /> field.
     const buildSelectField = (setting:any, i:number, onChangeCallback:Function) => {
         console.log("buildSelectField");
-        console.log(setting.name);
-        console.log(i);
-        console.log(settingsService.get(setting.name));
+        console.log(setting.values);
+        console.log(settingsService.getSettingValue(setting.name));
         return (
             <ListItem key={setting.name} bottomDivider>
                 <ListItem.Content>
                     <ListItem.Title>{setting.name}</ListItem.Title>
                     <Dropdown
                         data={setting.values}
-                        search
                         labelField="label"
                         valueField="value"
-                        value={settingsService.get(setting.name).value}
+                        value={settingsService.getSettingValue(setting.name)}
                         onChange={(value) => onChangeCallback(setting.name, value)}
                     />
                 </ListItem.Content>
@@ -88,9 +90,13 @@ export default async function SettingsPage() {
     };
 
     const onFieldChange = (name:any, value:any) => {
-        if (settingsService.getConstant(name).value === value) { return; }
+        console.log("onFieldChange");
+        console.log(name);
+        console.log(settingsService.getSettingValue(name));
+        console.log(value);
+        if (settingsService.getConstant(name) === value) { return; }
         settingsService.set(name, value);
-        console.log(`[doSetConfig] ${JSON.stringify(name, value)}`);
+        console.log("[doSetConfig] name: " + name + ", value: " + value);
         locationSession.updateLocationConfig();
     }
 

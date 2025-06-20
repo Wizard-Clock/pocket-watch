@@ -15,7 +15,7 @@ const LocationContext = createContext<{
     toggleLocationService: () => null,
     updateLocationConfig: () => null,
     locationStarted: false,
-    locationIcon: "",
+    locationIcon: "play-circle",
 });
 
 // Access the context as a hook
