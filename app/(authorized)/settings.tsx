@@ -31,6 +31,7 @@ export default function SettingsPage() {
 
     /// Render <Input /> Field
     const buildInputField = (setting:any, i:number, onChangeCallback:Function) => {
+        const [inputValue, setInputValue] = useState(settingsService.getSettingValue(setting.name));
         console.log("buildInputField");
         console.log(setting);
         console.log(settingsService.getSettingValue(setting.name));
@@ -38,8 +39,16 @@ export default function SettingsPage() {
             <ListItem key={setting.name} bottomDivider>
                 <TextInput
                     label={setting.name}
-                    value={settingsService.getSettingValue(setting.name)}
-                    onChangeText={(value) => onChangeCallback(setting.name, value)}
+                    value={inputValue}
+                    onChangeText={(value) => {
+                        onChangeCallback(setting.name, value);
+                        setInputValue(value);
+                    }}
+                    style={{
+                        width:320,
+                        height:40
+                    }}
+                    mode="outlined"
                     keyboardType="default"
                     autoCapitalize="none"
                     autoCorrect={false}
