@@ -13,12 +13,24 @@ const APP_SETTINGS:any = {
                 {label: 'LOW', value: BackgroundGeolocation.DESIRED_ACCURACY_LOW},
                 {label: 'MINIMUM', value: BackgroundGeolocation.DESIRED_ACCURACY_VERY_LOW},
             ], defaultValue: BackgroundGeolocation.DESIRED_ACCURACY_HIGH },
-        {name: 'distanceFilter', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [0, 10, 20, 50, 100, 500], defaultValue: 20},
+        {name: 'distanceFilter', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
+                {label: '0 m', value: 0},
+                {label: '10 m', value: 10},
+                {label: '20 m', value: 20},
+                {label: '50 m', value: 50},
+                {label: '100 m', value: 100},
+                {label: '500 m', value: 500},
+            ], defaultValue: 20},
         {name: 'useSignificantChangesOnly', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
         // Application
         {name: 'stopOnTerminate', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
         {name: 'startOnBoot', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        {name: 'heartbeatInterval', group: 'application', dataType: 'integer', inputType: 'select', values: [-1, 60, (2*60), (5*60), (15*60)], defaultValue: 60},
+        {name: 'heartbeatInterval', group: 'application', dataType: 'integer', inputType: 'select', values: [
+                {label: '1 minute', value: 60},
+                {label: '2 minutes', value: 120},
+                {label: '5 minutes', value: 300},
+                {label: '15 minutes', value: 900},
+            ], defaultValue: 60},
         // Logging & Debug
         {name: 'debug', group: 'debug', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
         {name: 'logLevel', group: 'debug', dataType: 'string', inputType: 'select', values:[
@@ -29,7 +41,12 @@ const APP_SETTINGS:any = {
                 {label: 'DEBUG', value: 4},
                 {label: 'VERBOSE', value: 5}
             ], defaultValue: 5},
-        {name: 'logMaxDays', group: 'debug', dataType: 'integer', inputType: 'select', values: [1, 2, 3, 4, 5, 6, 7], defaultValue: 3}
+        {name: 'logMaxDays', group: 'debug', dataType: 'integer', inputType: 'select', values: [
+                {label: '1 day', value: 1},
+                {label: '2 days', value: 2},
+                {label: '3 days', value: 3},
+                {label: '1 week', value: 7},
+            ], defaultValue: 3}
     ],
     ios: [
         {name: 'preventSuspend', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},

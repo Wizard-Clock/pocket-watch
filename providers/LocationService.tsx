@@ -48,6 +48,7 @@ export default function LocationService() {
             stopOnTerminate: settingsService.getSettingValue("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
             startOnBoot: settingsService.getSettingValue("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
             enableHeadless: settingsService.getSettingValue("enableHeadless"),
+            preventSuspend: true,
             heartbeatInterval: settingsService.getSettingValue("heartbeatInterval"),
             // HTTP / SQLite config
             url: settingsService.getSettingValue("url") + "/api/updateUserLocation",

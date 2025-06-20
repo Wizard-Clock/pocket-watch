@@ -87,6 +87,10 @@ export default function SettingsPage() {
                 <ListItem.Content>
                     <ListItem.Title>{setting.name}</ListItem.Title>
                     <Dropdown
+                        style={{
+                            width:320,
+                            height:40
+                        }}
                         data={setting.values}
                         labelField="label"
                         valueField="value"
@@ -122,8 +126,8 @@ export default function SettingsPage() {
                 <Appbar.Content title="Settings"/>
                 <Appbar.Action icon="logout" onPress={signOut} />
             </Appbar.Header>
-            <SafeAreaView>
-                <ScrollView>
+            <ScrollView>
+                <SafeAreaView>
                     <Text>Geolocation</Text>
                     <View>
                         {renderPluginSettings('geolocation')}
@@ -136,8 +140,8 @@ export default function SettingsPage() {
                     <View>
                         {renderPluginSettings('application')}
                     </View>
-                </ScrollView>
-            </SafeAreaView>
+                </SafeAreaView>
+            </ScrollView>
         </>
     );
 }
