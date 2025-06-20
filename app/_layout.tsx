@@ -4,11 +4,11 @@ import {ReactNode, StrictMode} from "react";
 import SettingsService from "@/providers/SettingsService";
 
 export default function RootLayout(): ReactNode {
-    const settingsService = SettingsService.getInstance();
+    SettingsService.getInstance();
     return (
         <StrictMode>
             <AuthProvider>
-                <Slot />
+                    <Slot />
             </AuthProvider>
         </StrictMode>
     );

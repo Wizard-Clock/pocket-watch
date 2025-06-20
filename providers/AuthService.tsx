@@ -14,6 +14,7 @@ import {
     useState
 } from 'react';
 import {fetch} from 'expo/fetch';
+import SettingsService from "@/providers/SettingsService";
 
 const AuthContext = createContext<{
     signIn: (url: string, username: string, password: string) => void;
@@ -35,6 +36,7 @@ export function useAuthSession() {
 }
 
 export default function AuthProvider({children}:{children: ReactNode}): ReactNode {
+    const settingsService = SettingsService.getInstance();
     const tokenRef = useRef<string|null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [genError, setGenError] = useState('');
@@ -90,6 +92,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                     await SecureStore.setItemAsync('token', jsonToken.token);
                 }
                 tokenRef.current = jsonToken;
+                settingsService.set("url", url);
                 setIsLoading(false);
                 router.replace('/');
             } else {

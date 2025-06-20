@@ -1,4 +1,4 @@
-import {createContext, useContext, useEffect, useState} from "react"
+import {createContext, ReactNode, useContext, useEffect, useState} from "react"
 import SettingsService from "@/providers/SettingsService"
 import {useAuthSession} from "@/providers/AuthService";
 import BackgroundGeolocation, { Subscription } from "react-native-background-geolocation";
@@ -9,11 +9,13 @@ const LOCATION_TASK_NAME = "HOUSE_ELF_SERVICE";
 const LocationContext = createContext<{
     toggleLocationService: () => void
     updateLocationConfig: () => void
+    sendLocationPing: () => void
     locationStarted: boolean
     locationIcon: string;
 }>({
     toggleLocationService: () => null,
     updateLocationConfig: () => null,
+    sendLocationPing: () => null,
     locationStarted: false,
     locationIcon: "play-circle",
 });
@@ -23,10 +25,9 @@ export function useLocationSession() {
     return useContext(LocationContext);
 }
 
-export default function LocationService() {
+export default function LocationProvider({children}:{children: ReactNode}): ReactNode {
     const settingsService = SettingsService.getInstance();
     const {token} = useAuthSession();
-    //Other options = stop-circle
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
     const [enabled, setEnabled] = useState(false);
@@ -54,7 +55,7 @@ export default function LocationService() {
             url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
             headers: {              // <-- Optional HTTP headers
                 "Content-Type": "application/x-www-form-urlencoded",
-                "bearer": token
+                "authorization": "bearer " + token
             },
             locationTemplate: '{Location: {"latitude":<%= latitude %>,"longitude":<%= longitude %>}}',
             // Authorization
@@ -132,11 +133,24 @@ export default function LocationService() {
 
     const setLocationServiceState = (value:boolean) => {
         setLocationStarted(value);
-        setLocationIcon(value ? 'play-circle' : 'stop-circle');
+        setLocationIcon(value ? 'stop-circle' : 'play-circle');
         console.log('tracking started?', value);
     }
 
     const updateLocationConfig = () => {
+        console.log('Update location config');
+        console.log('desiredAccuracy: ' + settingsService.getSettingValue("desiredAccuracy"));
+        console.log('distanceFilter: ' + settingsService.getSettingValue("distanceFilter"));
+        console.log('debug: ' + settingsService.getSettingValue("debug"));
+        console.log('logLevel: ' + settingsService.getSettingValue("logLevel"));
+        console.log('stopOnTerminate: ' + settingsService.getSettingValue("stopOnTerminate"));
+        console.log('startOnBoot: ' + settingsService.getSettingValue("startOnBoot"));
+        console.log('enableHeadless: ' + settingsService.getSettingValue("enableHeadless"));
+        console.log('heartbeatInterval: ' + settingsService.getSettingValue("heartbeatInterval"));
+        console.log('url: ' + settingsService.getSettingValue("url") + "/api/updateUserLocation");
+        console.log('bearer: ' + token);
+
+
         BackgroundGeolocation.setConfig({
             // Geolocation Config
             desiredAccuracy: settingsService.getSettingValue("desiredAccuracy"),
@@ -164,4 +178,26 @@ export default function LocationService() {
             }
         }).then(result => console.log("- BackgroundGeolocation configuration updated"));
     }
+
+    const sendLocationPing = () => {
+        BackgroundGeolocation.getCurrentPosition({
+            timeout: 10,          // 30 second timeout to fetch location
+            maximumAge: 5000,     // Accept the last-known-location if not older than 5000 ms.
+            desiredAccuracy: 10,  // Try to fetch a location with an accuracy of `10` meters.
+        }).then(value => {console.log(value)});
+    }
+
+    return (
+        <LocationContext.Provider
+            value={{
+                toggleLocationService,
+                updateLocationConfig,
+                sendLocationPing,
+                locationStarted,
+                locationIcon
+            }}
+        >
+            {children}
+        </LocationContext.Provider>
+    );
 }

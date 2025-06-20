@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Appbar, Switch, Text, TextInput} from 'react-native-paper'
+import {Appbar, Button, Switch, Text, TextInput} from 'react-native-paper'
 import {useRouter} from "expo-router";
 import {useAuthSession} from "@/providers/AuthService";
 import {SafeAreaView, ScrollView, View} from "react-native";
@@ -139,6 +139,20 @@ export default function SettingsPage() {
                     <Text>Application</Text>
                     <View>
                         {renderPluginSettings('application')}
+                    </View>
+                    <Text>Dev Section</Text>
+                    <View>
+                        {renderPluginSettings('debug')}
+                        <ListItem key="locationPing" bottomDivider>
+                            <ListItem.Content>
+                                <ListItem.Title>Send Location Ping to Server</ListItem.Title>
+                                    <Button
+                                        style={{marginBottom: 30}}
+                                        mode="contained-tonal"
+                                        onPress={locationSession.sendLocationPing}
+                                    >Location Ping</Button>
+                            </ListItem.Content>
+                        </ListItem>
                     </View>
                 </SafeAreaView>
             </ScrollView>
