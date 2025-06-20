@@ -40,17 +40,17 @@ export default function LocationService() {
 
         BackgroundGeolocation.ready({
             // Geolocation Config
-            desiredAccuracy: settingsService.get("desiredAccuracy"),
-            distanceFilter: settingsService.get("distanceFilter"),
+            desiredAccuracy: settingsService.getSettingValue("desiredAccuracy"),
+            distanceFilter: settingsService.getSettingValue("distanceFilter"),
             // Application config
-            debug: settingsService.get("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
-            logLevel: settingsService.get("logLevel"),
-            stopOnTerminate: settingsService.get("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
-            startOnBoot: settingsService.get("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
-            enableHeadless: settingsService.get("enableHeadless"),
-            heartbeatInterval: settingsService.get("heartbeatInterval"),
+            debug: settingsService.getSettingValue("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
+            logLevel: settingsService.getSettingValue("logLevel"),
+            stopOnTerminate: settingsService.getSettingValue("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
+            startOnBoot: settingsService.getSettingValue("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
+            enableHeadless: settingsService.getSettingValue("enableHeadless"),
+            heartbeatInterval: settingsService.getSettingValue("heartbeatInterval"),
             // HTTP / SQLite config
-            url: settingsService.get("url") + "/api/updateUserLocation",
+            url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
             headers: {              // <-- Optional HTTP headers
                 "Content-Type": "application/x-www-form-urlencoded",
                 "bearer": token
@@ -138,17 +138,17 @@ export default function LocationService() {
     const updateLocationConfig = () => {
         BackgroundGeolocation.setConfig({
             // Geolocation Config
-            desiredAccuracy: settingsService.get("desiredAccuracy"),
-            distanceFilter: settingsService.get("distanceFilter"),
+            desiredAccuracy: settingsService.getSettingValue("desiredAccuracy"),
+            distanceFilter: settingsService.getSettingValue("distanceFilter"),
             // Application config
-            debug: settingsService.get("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
-            logLevel: settingsService.get("logLevel"),
-            stopOnTerminate: settingsService.get("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
-            startOnBoot: settingsService.get("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
-            enableHeadless: settingsService.get("enableHeadless"),
-            heartbeatInterval: settingsService.get("heartbeatInterval"),
+            debug: settingsService.getSettingValue("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
+            logLevel: settingsService.getSettingValue("logLevel"),
+            stopOnTerminate: settingsService.getSettingValue("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
+            startOnBoot: settingsService.getSettingValue("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
+            enableHeadless: settingsService.getSettingValue("enableHeadless"),
+            heartbeatInterval: settingsService.getSettingValue("heartbeatInterval"),
             // HTTP / SQLite config
-            url: settingsService.get("url") + "/api/updateUserLocation",
+            url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
             headers: {              // <-- Optional HTTP headers
                 "Content-Type": "application/x-www-form-urlencoded",
                 "bearer": token
