@@ -180,6 +180,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     }
 
     const sendLocationPing = () => {
+        console.log('Sending location ping to the server...');
         BackgroundGeolocation.getCurrentPosition({
             timeout: 10,          // 30 second timeout to fetch location
             maximumAge: 5000,     // Accept the last-known-location if not older than 5000 ms.

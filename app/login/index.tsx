@@ -5,6 +5,7 @@ import {useForm, Controller} from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {ActivityIndicator, Image, SafeAreaView} from "react-native";
 import {ReactNode} from "react";
+import Colors from '@/components/colorPalette'
 
 export default function Login(): ReactNode {
     let url;
@@ -44,6 +45,7 @@ export default function Login(): ReactNode {
                 flex: 1,
                 justifyContent: "flex-start",
                 alignItems: "center",
+                backgroundColor: Colors.background
             }}
         >
             <Image
@@ -66,15 +68,25 @@ export default function Login(): ReactNode {
                         style={{
                             marginTop: 30,
                             width:320,
-                            height:40
+                            height:40,
+                            backgroundColor: Colors.background,
+                            color: Colors.primary
                         }}
                         autoCapitalize="none"
                         mode="outlined"
                         label="Server URL"
+                        activeOutlineColor={Colors.primary}
+                        outlineColor={Colors.primary}
+                        textColor={Colors.primary}
                         disabled={isLoading}
                         onChangeText={onChange}
                         defaultValue={url}
                         value={value}
+                        theme={{
+                            colors: {
+                                onSurfaceVariant: Colors.primary
+                            }
+                        }}
                     />
                 )}
                 name="url"
@@ -90,15 +102,24 @@ export default function Login(): ReactNode {
                         style={{
                             marginTop: 30,
                             width:320,
-                            height:40
+                            height:40,
+                            backgroundColor: Colors.background
                         }}
                         autoCapitalize="none"
                         mode="outlined"
                         label="Username"
                         disabled={isLoading}
+                        activeOutlineColor={Colors.primary}
+                        outlineColor={Colors.primary}
+                        textColor={Colors.primary}
                         onChangeText={onChange}
                         defaultValue={username}
                         value={value}
+                        theme={{
+                            colors: {
+                                onSurfaceVariant: Colors.primary
+                            }
+                        }}
                     />
                 )}
                 name="username"
@@ -114,16 +135,26 @@ export default function Login(): ReactNode {
                         style={{
                             marginTop: 30,
                             width:320,
-                            height:40
+                            height:40,
+                            backgroundColor: Colors.background
                         }}
                         autoCapitalize="none"
                         mode="outlined"
                         label="Password"
+
                         secureTextEntry={true}
                         disabled={isLoading}
+                        activeOutlineColor={Colors.primary}
+                        outlineColor={Colors.primary}
+                        textColor={Colors.primary}
                         onChangeText={onChange}
                         defaultValue={password}
                         value={value}
+                        theme={{
+                            colors: {
+                                onSurfaceVariant: Colors.primary
+                            }
+                        }}
                     />
                 )}
                 name="password"
@@ -134,6 +165,8 @@ export default function Login(): ReactNode {
                 mode="contained-tonal"
                 disabled={isLoading}
                 onPress={handleSubmit(onPressSend)}
+                buttonColor={Colors.primary}
+                textColor={Colors.background}
             >Log In</Button>
         </SafeAreaView>
     );
