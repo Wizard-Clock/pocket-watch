@@ -56,7 +56,11 @@ export default function Login(): ReactNode {
                 }}
                 source={require("@/assets/images/login-full-logo.png")}
             />
-            <ActivityIndicator animating={isLoading} size="large" />
+            <ActivityIndicator
+                animating={isLoading}
+                size="large"
+                color={Colors.primary}
+            />
             {genError!=="" && <Text>{genError}</Text>}
             <Controller
                 control={control}

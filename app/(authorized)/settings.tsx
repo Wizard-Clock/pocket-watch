@@ -7,6 +7,7 @@ import {useLocationSession} from "@/providers/LocationService";
 import SettingsService from "@/providers/SettingsService";
 import { Dropdown } from 'react-native-element-dropdown';
 import {ListItem} from "react-native-elements";
+import Colors from "@/components/colorPalette";
 
 export default function SettingsPage() {
     const {signOut} = useAuthSession();
@@ -32,9 +33,6 @@ export default function SettingsPage() {
     /// Render <Input /> Field
     const buildInputField = (setting:any, i:number, onChangeCallback:Function) => {
         const [inputValue, setInputValue] = useState(settingsService.getSettingValue(setting.name));
-        console.log("buildInputField");
-        console.log(setting);
-        console.log(settingsService.getSettingValue(setting.name));
         return (
             <ListItem key={setting.name} bottomDivider>
                 <TextInput
@@ -46,13 +44,23 @@ export default function SettingsPage() {
                     }}
                     style={{
                         width:320,
-                        height:40
+                        height:40,
+                        backgroundColor: Colors.background,
+                        color: Colors.primary
                     }}
                     mode="outlined"
                     keyboardType="default"
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoFocus={false}
+                    activeOutlineColor={Colors.primary}
+                    outlineColor={Colors.primary}
+                    textColor={Colors.primary}
+                    theme={{
+                        colors: {
+                            onSurfaceVariant: Colors.primary
+                        }
+                    }}
                 />
             </ListItem>
         );
@@ -67,6 +75,7 @@ export default function SettingsPage() {
                     <ListItem.Title>{setting.name}</ListItem.Title>
                     <Switch
                         value={switchValue}
+                        color={Colors.primary}
                         onValueChange={(value) => {
                             onChangeCallback(setting.name, value);
                             setSwitchValue(value);
@@ -79,9 +88,6 @@ export default function SettingsPage() {
 
     /// Render <DropDownPicker /> field.
     const buildSelectField = (setting:any, i:number, onChangeCallback:Function) => {
-        console.log("buildSelectField");
-        console.log(setting.values);
-        console.log(settingsService.getSettingValue(setting.name));
         return (
             <ListItem key={setting.name} bottomDivider>
                 <ListItem.Content>
@@ -103,10 +109,6 @@ export default function SettingsPage() {
     };
 
     const onFieldChange = (name:any, value:any) => {
-        console.log("onFieldChange");
-        console.log(name);
-        console.log(settingsService.getSettingValue(name));
-        console.log(value);
         if (settingsService.getConstant(name) === value) { return; }
         settingsService.set(name, value);
         console.log("[doSetConfig] name: " + name + ", value: " + value);
@@ -116,17 +118,33 @@ export default function SettingsPage() {
 
     return (
         <>
-            <Appbar.Header>
-                <Appbar.BackAction onPress={() => useRouter().back()} />
+            <Appbar.Header
+                style={{
+                    backgroundColor: Colors.primary
+                }}
+                theme={{ colors: { primary: 'green' } }}
+            >
+                <Appbar.BackAction
+                    onPress={() => useRouter().back()}
+                    color={Colors.background}
+                />
                 <Appbar.Action
                     icon={locationSession.locationIcon}
                     onPress={locationSession.toggleLocationService}
                     isLeading={true}
+                    color={Colors.background}
                 />
-                <Appbar.Content title="Settings"/>
-                <Appbar.Action icon="logout" onPress={signOut} />
+                <Appbar.Content title="Settings" color={Colors.background}/>
+                <Appbar.Action
+                    icon="logout"
+                    onPress={signOut}
+                    color={Colors.background} />
             </Appbar.Header>
-            <ScrollView>
+            <ScrollView
+                style={{
+                    backgroundColor: Colors.background
+                }}
+            >
                 <SafeAreaView>
                     <Text>Geolocation</Text>
                     <View>
@@ -150,6 +168,8 @@ export default function SettingsPage() {
                                         style={{marginBottom: 30}}
                                         mode="contained-tonal"
                                         onPress={locationSession.sendLocationPing}
+                                        buttonColor={Colors.primary}
+                                        textColor={Colors.background}
                                     >Location Ping</Button>
                             </ListItem.Content>
                         </ListItem>
