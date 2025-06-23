@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Appbar, Button, Switch, Text, TextInput} from 'react-native-paper'
+import {Appbar, Banner, Button, Switch, Text, TextInput} from 'react-native-paper'
 import {useRouter} from "expo-router";
 import {useAuthSession} from "@/providers/AuthService";
 import {SafeAreaView, ScrollView, View} from "react-native";
@@ -19,13 +19,10 @@ export default function SettingsPage() {
             switch (setting.inputType) {
                 case 'select':
                     return buildSelectField(setting, i, onFieldChange);
-                    break;
                 case 'toggle':
                     return buildSwitchField(setting, i, onFieldChange);
-                    break;
                 case 'text':
                     return buildInputField(setting, i, onFieldChange);
-                    break;
             }
         });
     }
@@ -53,6 +50,7 @@ export default function SettingsPage() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoFocus={false}
+                    disabled={locationSession.locationStarted}
                     activeOutlineColor={Colors.primary}
                     outlineColor={Colors.primary}
                     textColor={Colors.primary}
@@ -80,6 +78,7 @@ export default function SettingsPage() {
                             onChangeCallback(setting.name, value);
                             setSwitchValue(value);
                         }}
+                        disabled={locationSession.locationStarted}
                     />
                 </ListItem.Content>
             </ListItem>
@@ -102,6 +101,7 @@ export default function SettingsPage() {
                         valueField="value"
                         value={settingsService.getSettingValue(setting.name)}
                         onChange={(value) => onChangeCallback(setting.name, value)}
+                        disable={locationSession.locationStarted}
                     />
                 </ListItem.Content>
             </ListItem>
@@ -146,6 +146,29 @@ export default function SettingsPage() {
                 }}
             >
                 <SafeAreaView>
+                    <Banner
+                        visible={locationSession.locationStarted}
+                        actions={[{
+                            label: 'Turn off Location',
+                            onPress: () => {
+                                locationSession.toggleLocationService();
+                            },
+                        }]}
+                        style={{
+                            backgroundColor: Colors.secondary,
+                        }}
+                        theme={{
+                            colors: { primary: Colors.primary
+                            }}}
+                    >
+                        <Text
+                            style={{
+                                color: Colors.background,
+                            }}
+                        >
+                            Location reporting must be off to update settings.
+                        </Text>
+                    </Banner>
                     <Text>Geolocation</Text>
                     <View>
                         {renderPluginSettings('geolocation')}
@@ -170,6 +193,7 @@ export default function SettingsPage() {
                                         onPress={locationSession.sendLocationPing}
                                         buttonColor={Colors.primary}
                                         textColor={Colors.background}
+                                        disabled={locationSession.locationStarted}
                                     >Location Ping</Button>
                             </ListItem.Content>
                         </ListItem>
