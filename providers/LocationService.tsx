@@ -34,6 +34,8 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     const [position, setPosition] = useState('');
 
     useEffect(() => {
+        // @ts-ignore
+        let tokenVal = token?.current.token;
         const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
             console.log('[onLocation]', location);
             setPosition(JSON.stringify(location, null, 2));
@@ -54,10 +56,10 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
             // HTTP / SQLite config
             url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
             headers: {              // <-- Optional HTTP headers
-                "Content-Type": "application/x-www-form-urlencoded",
-                "authorization": "bearer " + token
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + tokenVal
             },
-            locationTemplate: '{Location: {"latitude":<%= latitude %>,"longitude":<%= longitude %>}}',
+            locationTemplate: '{"latitude":<%= latitude %>,"longitude":<%= longitude %>}',
             // Authorization
             locationAuthorizationRequest: 'Always',
             backgroundPermissionRationale: {
@@ -138,6 +140,8 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     }
 
     const updateLocationConfig = () => {
+        // @ts-ignore
+        let tokenVal = token?.current.token;
         console.log('Update location config');
         console.log('desiredAccuracy: ' + settingsService.getSettingValue("desiredAccuracy"));
         console.log('distanceFilter: ' + settingsService.getSettingValue("distanceFilter"));
@@ -148,7 +152,8 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
         console.log('enableHeadless: ' + settingsService.getSettingValue("enableHeadless"));
         console.log('heartbeatInterval: ' + settingsService.getSettingValue("heartbeatInterval"));
         console.log('url: ' + settingsService.getSettingValue("url") + "/api/updateUserLocation");
-        console.log('bearer: ' + token);
+        // @ts-ignore
+        console.log('Bearer: ' + tokenVal);
 
 
         BackgroundGeolocation.setConfig({
@@ -165,10 +170,10 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
             // HTTP / SQLite config
             url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
             headers: {              // <-- Optional HTTP headers
-                "Content-Type": "application/x-www-form-urlencoded",
-                "bearer": token
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + tokenVal
             },
-            locationTemplate: '{Location: {"latitude":<%= latitude %>,"longitude":<%= longitude %>}}',
+            locationTemplate: '{"latitude":<%= latitude %>,"longitude":<%= longitude %>}',
             // Authorization
             locationAuthorizationRequest: 'Always',
             backgroundPermissionRationale: {

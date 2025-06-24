@@ -193,7 +193,6 @@ export default function SettingsPage() {
                                         onPress={locationSession.sendLocationPing}
                                         buttonColor={Colors.primary}
                                         textColor={Colors.background}
-                                        disabled={locationSession.locationStarted}
                                     >Location Ping</Button>
                             </ListItem.Content>
                         </ListItem>

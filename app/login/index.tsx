@@ -8,6 +8,7 @@ import {ReactNode} from "react";
 import Colors from '@/components/colorPalette'
 
 export default function Login(): ReactNode {
+    const {signIn, isLoading, genError, token} = useAuthSession();
     let url;
     let username;
     let password;
@@ -34,7 +35,6 @@ export default function Login(): ReactNode {
             password: ''
         },
     });
-    const {signIn, isLoading, genError} = useAuthSession();
     const onPressSend = (formData: { url: string; username: string; password: string; }) => {
         signIn(formData.url, formData.username, formData.password);
     };
