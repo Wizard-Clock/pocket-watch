@@ -4,8 +4,6 @@ import {useAuthSession} from "@/providers/AuthService";
 import BackgroundGeolocation, { Subscription } from "react-native-background-geolocation";
 import BackgroundFetch from "react-native-background-fetch";
 
-const LOCATION_TASK_NAME = "HOUSE_ELF_SERVICE";
-
 const LocationContext = createContext<{
     toggleLocationService: () => void
     updateLocationConfig: () => void
@@ -36,10 +34,29 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     useEffect(() => {
         // @ts-ignore
         let tokenVal = token?.current.token;
+
+        // Event Subscribers
         const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
             console.log('[onLocation]', location);
             setPosition(JSON.stringify(location, null, 2));
-        })
+        });
+        const heartbeatSubscriber:Subscription = BackgroundGeolocation.onHeartbeat(async () => {
+            const taskId = await BackgroundGeolocation.startBackgroundTask();
+            try {
+                const location = await BackgroundGeolocation.getCurrentPosition({
+                    samples: 2,
+                    timeout: 10,
+                    extras: {
+                        "event": "heartbeat"
+                    }
+                });
+                console.log('[heartbeat] getCurrentPosition', location);
+                setPosition(JSON.stringify(location, null, 2));
+            } catch(error) {
+                console.log('[getCurrentPosition] ERROR: ', error);
+            }
+            await BackgroundGeolocation.stopBackgroundTask(taskId);
+        });
 
         BackgroundGeolocation.ready({
             // Geolocation Config
@@ -72,34 +89,18 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
             console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
         });
 
-        const heartbeatSubscriber:any = BackgroundGeolocation.onHeartbeat(async (event) => {
-            const taskId = await BackgroundGeolocation.startBackgroundTask();
-            try {
-                const location = await BackgroundGeolocation.getCurrentPosition({
-                    samples: 2,
-                    timeout: 10,
-                    extras: {
-                        "event": "heartbeat"
-                    }
-                });
-                console.log('[heartbeat] getCurrentPosition', location);
-            } catch(error) {
-                console.log('[getCurrentPosition] ERROR: ', error);
-            }
-            BackgroundGeolocation.stopBackgroundTask(taskId);
-        });
-
         initBackgroundFetch();
         return () => {
             // Remove BackgroundGeolocation event-subscribers when the View is removed or refreshed
             // during development live-reload.  Without this, event-listeners will accumulate with
             // each refresh during live-reload.
             onLocation.remove();
+            heartbeatSubscriber.remove();
         }
     }, []);
 
     const initBackgroundFetch = async() => {
-        BackgroundFetch.configure({
+        await BackgroundFetch.configure({
             minimumFetchInterval: 15,
             enableHeadless: true,
             stopOnTerminate: false
@@ -115,6 +116,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 samples: 2
             });
             console.log('[getCurrentPosition]', location);
+            setPosition(JSON.stringify(location, null, 2));
             BackgroundFetch.finish(taskId);
         }, async (taskId) => {
             console.log('[BackgroundFetch] TIMEOUT:', taskId);
@@ -181,7 +183,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 message: "In order to allow your house elf to follow you, please enable 'Allow all the time permission",
                 positiveAction: "Change to Allow all the time"
             }
-        }).then(result => console.log("- BackgroundGeolocation configuration updated"));
+        }).then(() => console.log("- BackgroundGeolocation configuration updated"));
     }
 
     const sendLocationPing = () => {

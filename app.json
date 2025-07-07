@@ -33,11 +33,11 @@
       },
       "package": "com.siriusfeely.pocketwatch",
       "permissions": [
-          "ACCESS_COARSE_LOCATION",
-          "ACCESS_FINE_LOCATION",
-          "ACCESS_BACKGROUND_LOCATION",
-          "FOREGROUND_SERVICE",
-          "FOREGROUND_SERVICE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
@@ -57,17 +57,20 @@
         }
       ],
       [
-        "react-native-background-geolocation", {
+        "react-native-background-geolocation",
+        {
           "license": "YOUR_LICENSE_KEY_HERE"
         }
       ],
       [
-        "expo-gradle-ext-vars", {
+        "expo-gradle-ext-vars",
+        {
           "googlePlayServicesLocationVersion": "21.1.0",
           "appCompatVersion": "1.4.2"
         }
       ],
-      "react-native-background-fetch"
+      "react-native-background-fetch",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
