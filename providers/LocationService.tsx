@@ -1,8 +1,8 @@
 import {createContext, ReactNode, useContext, useEffect, useState} from "react"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import SettingsService from "@/providers/SettingsService"
 const settingsService = SettingsService.getInstance();
 import {useAuthSession} from "@/providers/AuthService";
-const {token} = useAuthSession();
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
@@ -13,29 +13,31 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data: { locations }, error }
     try {
         const now = Date.now();
         console.log(`Got location task call at date: ${new Date(now).toISOString()}`);
-        console.log(`Got location task location of: ${locations}`);
+        for (let location of locations) {
+            console.log(`Got location task location of: ${location}`);
+        }
 
-        // @ts-ignore
-        let tokenVal = token?.current.token;
+        let tokenVal = await AsyncStorage.getItem("pocket-watch:token");
         console.log("tokenVal: "+ tokenVal);
         let url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
-
-        let response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify({
-                location: {
-                    // @ts-ignore
-                    "latitude": locations.coords.latitude,
-                    // @ts-ignore
-                    "longitude": locations.coords.longitude
+        for (let location of locations) {
+            let response = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    location: {
+                        // @ts-ignore
+                        "latitude": location.coords.latitude,
+                        // @ts-ignore
+                        "longitude": location.coords.longitude
+                    }
+                }),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + tokenVal
                 }
-            }),
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + tokenVal
-            }
-        });
-        console.log(response);
+            });
+            console.log(response);
+        }
     } catch (error) {
         console.error('Failed to execute the background task:', error);
         return BackgroundTask.BackgroundTaskResult.Failed;
@@ -110,6 +112,10 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 return;
             }
 
+            // @ts-ignore
+            let tokenVal= token?.current.token;
+            console.log("tokenVal: "+ tokenVal);
+            AsyncStorage.setItem("pocket-watch:token", tokenVal);
             Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
                 accuracy: settingsService.getSettingValue("desiredAccuracy"),
                 timeInterval: settingsService.getSettingValue("timeInterval"),
