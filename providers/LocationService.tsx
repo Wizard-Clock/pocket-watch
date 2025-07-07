@@ -1,8 +1,60 @@
 import {createContext, ReactNode, useContext, useEffect, useState} from "react"
 import SettingsService from "@/providers/SettingsService"
+const settingsService = SettingsService.getInstance();
 import {useAuthSession} from "@/providers/AuthService";
-import BackgroundGeolocation, { Subscription } from "react-native-background-geolocation";
-import BackgroundFetch from "react-native-background-fetch";
+const {token} = useAuthSession();
+import * as BackgroundTask from 'expo-background-task';
+import * as TaskManager from 'expo-task-manager';
+import * as Location from 'expo-location';
+
+const LOCATION_TASK_NAME = "DOBBY_TRACKING_SERVICE";
+// @ts-ignore
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data: { locations }, error }) => {
+    try {
+        const now = Date.now();
+        console.log(`Got location task call at date: ${new Date(now).toISOString()}`);
+        console.log(`Got location task location of: ${locations}`);
+
+        // @ts-ignore
+        let tokenVal = token?.current.token;
+        console.log("tokenVal: "+ tokenVal);
+        let url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
+
+        let response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+                location: {
+                    // @ts-ignore
+                    "latitude": locations.coords.latitude,
+                    // @ts-ignore
+                    "longitude": locations.coords.longitude
+                }
+            }),
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + tokenVal
+            }
+        });
+        console.log(response);
+    } catch (error) {
+        console.error('Failed to execute the background task:', error);
+        return BackgroundTask.BackgroundTaskResult.Failed;
+    }
+    return BackgroundTask.BackgroundTaskResult.Success;
+});
+
+const BACKGROUND_FETCH_NAME = "KREATURE_TRACKING_SERVICE"
+TaskManager.defineTask(BACKGROUND_FETCH_NAME, async () => {
+    try {
+        const now = Date.now();
+        console.log(`Got background task call at date: ${new Date(now).toISOString()}`);
+
+    } catch (error) {
+        console.error('Failed to execute the background task:', error);
+        return BackgroundTask.BackgroundTaskResult.Failed;
+    }
+    return BackgroundTask.BackgroundTaskResult.Success;
+});
 
 const LocationContext = createContext<{
     toggleLocationService: () => void
@@ -24,114 +76,51 @@ export function useLocationSession() {
 }
 
 export default function LocationProvider({children}:{children: ReactNode}): ReactNode {
-    const settingsService = SettingsService.getInstance();
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
-    const [enabled, setEnabled] = useState(false);
-    const [position, setPosition] = useState('');
 
     useEffect(() => {
-        // @ts-ignore
-        let tokenVal = token?.current.token;
-
-        // Event Subscribers
-        const onLocation:Subscription = BackgroundGeolocation.onLocation((location) => {
-            console.log('[onLocation]', location);
-            setPosition(JSON.stringify(location, null, 2));
-        });
-        const heartbeatSubscriber:Subscription = BackgroundGeolocation.onHeartbeat(async () => {
-            const taskId = await BackgroundGeolocation.startBackgroundTask();
+        const requestPermissions = async () => {
             try {
-                const location = await BackgroundGeolocation.getCurrentPosition({
-                    samples: 2,
-                    timeout: 10,
-                    extras: {
-                        "event": "heartbeat"
-                    }
-                });
-                console.log('[heartbeat] getCurrentPosition', location);
-                setPosition(JSON.stringify(location, null, 2));
-            } catch(error) {
-                console.log('[getCurrentPosition] ERROR: ', error);
+                await Location.requestForegroundPermissionsAsync();
+                await Location.requestBackgroundPermissionsAsync();
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
-            await BackgroundGeolocation.stopBackgroundTask(taskId);
-        });
-
-        BackgroundGeolocation.ready({
-            // Geolocation Config
-            desiredAccuracy: settingsService.getSettingValue("desiredAccuracy"),
-            distanceFilter: settingsService.getSettingValue("distanceFilter"),
-            // Application config
-            debug: settingsService.getSettingValue("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
-            logLevel: settingsService.getSettingValue("logLevel"),
-            stopOnTerminate: settingsService.getSettingValue("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
-            startOnBoot: settingsService.getSettingValue("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
-            enableHeadless: settingsService.getSettingValue("enableHeadless"),
-            preventSuspend: true,
-            heartbeatInterval: settingsService.getSettingValue("heartbeatInterval"),
-            // HTTP / SQLite config
-            url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
-            headers: {              // <-- Optional HTTP headers
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + tokenVal
-            },
-            locationTemplate: '{"latitude":<%= latitude %>,"longitude":<%= longitude %>}',
-            // Authorization
-            locationAuthorizationRequest: 'Always',
-            backgroundPermissionRationale: {
-                title: "Allow access to this device's location in the background?",
-                message: "In order to allow your house elf to follow you, please enable 'Allow all the time permission",
-                positiveAction: "Change to Allow all the time"
-            }
-        }).then((state) => {
-            setEnabled(state.enabled)
-            console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
-        });
-
-        initBackgroundFetch();
-        return () => {
-            // Remove BackgroundGeolocation event-subscribers when the View is removed or refreshed
-            // during development live-reload.  Without this, event-listeners will accumulate with
-            // each refresh during live-reload.
-            onLocation.remove();
-            heartbeatSubscriber.remove();
         }
-    }, []);
-
-    const initBackgroundFetch = async() => {
-        await BackgroundFetch.configure({
-            minimumFetchInterval: 15,
-            enableHeadless: true,
-            stopOnTerminate: false
-        }, async (taskId) => {
-            console.log('[BackgroundFetch]', taskId);
-            const location = await BackgroundGeolocation.getCurrentPosition({
-                extras: {
-                    "event": "background-fetch"
-                },
-                maximumAge: 10000,
-                persist: true,
-                timeout: 30,
-                samples: 2
-            });
-            console.log('[getCurrentPosition]', location);
-            setPosition(JSON.stringify(location, null, 2));
-            BackgroundFetch.finish(taskId);
-        }, async (taskId) => {
-            console.log('[BackgroundFetch] TIMEOUT:', taskId);
-            BackgroundFetch.finish(taskId);
-        });
-    }
+        requestPermissions();
+    });
 
     const toggleLocationService = () => {
-        console.log("Toggle location service");
+        console.log("Toggled location service");
         if (locationStarted) {
-            BackgroundGeolocation.stop();
-            setLocationServiceState(false);
+            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+                .then(() => setLocationServiceState(false));
         } else {
-            BackgroundGeolocation.start();
-            setLocationServiceState(true);
+            if (!Location.getBackgroundPermissionsAsync()) {
+                console.log("location tracking denied");
+                Location.requestBackgroundPermissionsAsync();
+                return;
+            }
+
+            const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+            if (!isTaskDefined) {
+                console.log("Task is not defined");
+                return;
+            }
+
+            Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+                accuracy: settingsService.getSettingValue("desiredAccuracy"),
+                timeInterval: settingsService.getSettingValue("timeInterval"),
+                distanceInterval: settingsService.getSettingValue("distanceInterval"),
+                showsBackgroundLocationIndicator: true, // iOS only.  Shows a blue bar when in background.  Requires background location capability in iOS.
+                foregroundService: {
+                    notificationTitle: 'Dobby is Following',
+                    notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
+                    killServiceOnDestroy: false
+                },
+            }).then(() => setLocationServiceState(true));
         }
     }
 
@@ -146,53 +135,39 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
         let tokenVal = token?.current.token;
         console.log('Update location config');
         console.log('desiredAccuracy: ' + settingsService.getSettingValue("desiredAccuracy"));
-        console.log('distanceFilter: ' + settingsService.getSettingValue("distanceFilter"));
-        console.log('debug: ' + settingsService.getSettingValue("debug"));
-        console.log('logLevel: ' + settingsService.getSettingValue("logLevel"));
-        console.log('stopOnTerminate: ' + settingsService.getSettingValue("stopOnTerminate"));
-        console.log('startOnBoot: ' + settingsService.getSettingValue("startOnBoot"));
-        console.log('enableHeadless: ' + settingsService.getSettingValue("enableHeadless"));
-        console.log('heartbeatInterval: ' + settingsService.getSettingValue("heartbeatInterval"));
+        console.log('timeInterval: ' + settingsService.getSettingValue("timeInterval"));
+        console.log('distanceInterval: ' + settingsService.getSettingValue("distanceInterval"));
         console.log('url: ' + settingsService.getSettingValue("url") + "/api/updateUserLocation");
         // @ts-ignore
         console.log('Bearer: ' + tokenVal);
-
-
-        BackgroundGeolocation.setConfig({
-            // Geolocation Config
-            desiredAccuracy: settingsService.getSettingValue("desiredAccuracy"),
-            distanceFilter: settingsService.getSettingValue("distanceFilter"),
-            // Application config
-            debug: settingsService.getSettingValue("debug"), // <-- enable this hear sounds for background-geolocation life-cycle.
-            logLevel: settingsService.getSettingValue("logLevel"),
-            stopOnTerminate: settingsService.getSettingValue("stopOnTerminate"),   // <-- Allow the background-service to continue tracking when user closes the app.
-            startOnBoot: settingsService.getSettingValue("startOnBoot"),        // <-- Auto start tracking when device is powered-up.
-            enableHeadless: settingsService.getSettingValue("enableHeadless"),
-            heartbeatInterval: settingsService.getSettingValue("heartbeatInterval"),
-            // HTTP / SQLite config
-            url: settingsService.getSettingValue("url") + "/api/updateUserLocation",
-            headers: {              // <-- Optional HTTP headers
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + tokenVal
-            },
-            locationTemplate: '{"latitude":<%= latitude %>,"longitude":<%= longitude %>}',
-            // Authorization
-            locationAuthorizationRequest: 'Always',
-            backgroundPermissionRationale: {
-                title: "Allow access to this device's location in the background?",
-                message: "In order to allow your house elf to follow you, please enable 'Allow all the time permission",
-                positiveAction: "Change to Allow all the time"
-            }
-        }).then(() => console.log("- BackgroundGeolocation configuration updated"));
     }
 
-    const sendLocationPing = () => {
+    const sendLocationPing = async () => {
         console.log('Sending location ping to the server...');
-        BackgroundGeolocation.getCurrentPosition({
-            timeout: 10,          // 30 second timeout to fetch location
-            maximumAge: 5000,     // Accept the last-known-location if not older than 5000 ms.
-            desiredAccuracy: 10,  // Try to fetch a location with an accuracy of `10` meters.
-        }).then(value => {console.log(value)});
+        let position= await Location.getCurrentPositionAsync();
+        console.log('position: ' + position);
+
+        // @ts-ignore
+        let tokenVal= token?.current.token;
+        console.log("tokenVal: "+ tokenVal);
+
+        const url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
+        let response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+                location: {
+                    // @ts-ignore
+                    "latitude": position.coords.latitude,
+                    // @ts-ignore
+                    "longitude": position.coords.longitude
+                }
+            }),
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + tokenVal
+            }
+        });
+        console.log(response);
     }
 
     return (

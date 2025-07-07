@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from "react-native";
-import BackgroundGeolocation from "react-native-background-geolocation";
+import * as Location from 'expo-location'
 
 const STORAGE_KEY:string = "pocket-watch";
 
@@ -8,12 +8,13 @@ const APP_SETTINGS:any = {
     common: [
         {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://your.server.com/endpoint'},
         {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
-                {label: 'HIGH', value: BackgroundGeolocation.DESIRED_ACCURACY_HIGH},
-                {label: 'MEDIUM', value: BackgroundGeolocation.DESIRED_ACCURACY_MEDIUM},
-                {label: 'LOW', value: BackgroundGeolocation.DESIRED_ACCURACY_LOW},
-                {label: 'MINIMUM', value: BackgroundGeolocation.DESIRED_ACCURACY_VERY_LOW},
-            ], defaultValue: BackgroundGeolocation.DESIRED_ACCURACY_HIGH },
-        {name: 'distanceFilter', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
+                {label: 'HIGHEST', value: Location.Accuracy.Highest},
+                {label: 'HIGH', value: Location.Accuracy.High},
+                {label: 'BALANCED', value: Location.Accuracy.Balanced},
+                {label: 'LOW', value: Location.Accuracy.Low},
+                {label: 'LOWEST', value: Location.Accuracy.Lowest},
+            ], defaultValue: Location.Accuracy.High },
+        {name: 'distanceInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: '0 m', value: 0},
                 {label: '10 m', value: 10},
                 {label: '20 m', value: 20},
@@ -54,13 +55,15 @@ const APP_SETTINGS:any = {
     android: [
         // Application
         {name: 'enableHeadless', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        {name: 'notificationPriority', group: 'application', dataType: 'integer', inputType: 'select', values: [
-                {label:'DEFAULT', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_DEFAULT},
-                {label:'HIGH', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_HIGH},
-                {label:'LOW', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_LOW},
-                {label:'MAX', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_MAX},
-                {label:'MIN', value:BackgroundGeolocation.NOTIFICATION_PRIORITY_MIN}
-            ], defaultValue: BackgroundGeolocation.NOTIFICATION_PRIORITY_DEFAULT}
+        {name: 'timeInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
+                {label: '0 second', value: 0},
+                {label: '5 seconds', value: 5000},
+                {label: '30 seconds', value: 30000},
+                {label: '1 minute', value: 60000},
+                {label: '5 minutes', value: 300000},
+                {label: '15 minutes', value: 900000},
+                {label: '30 minutes', value: 1800000},
+            ], defaultValue: 0}
     ]
 };
 
