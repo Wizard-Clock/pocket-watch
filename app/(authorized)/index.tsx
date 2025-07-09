@@ -1,10 +1,11 @@
 import {useRouter} from 'expo-router';
-import {Appbar, Text} from 'react-native-paper';
+import {Appbar} from 'react-native-paper';
 import {useAuthSession} from "@/providers/AuthService";
 import React from "react";
 import {SafeAreaView} from "react-native";
 import {useLocationSession} from "@/providers/LocationService";
 import Colors from "@/components/colorPalette";
+import {PocketWatchFace} from "@/components/pocketWatchFace";
 
 export default function HomePage(){
     const {signOut} = useAuthSession();
@@ -39,7 +40,7 @@ export default function HomePage(){
                         onPress={() => useRouter().navigate('/settings')}
                         color={Colors.background}/>
                 </Appbar.Header>
-                <Text>Home BBY</Text>
+                <PocketWatchFace/>
             </SafeAreaView>
         </>
     )
