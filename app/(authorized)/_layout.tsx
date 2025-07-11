@@ -1,14 +1,28 @@
 import {useAuthSession} from "@/providers/AuthService";
 import {Redirect, Stack} from 'expo-router';
 import {ActivityIndicator} from 'react-native-paper';
+import {SafeAreaView} from "react-native";
 import {ReactNode} from "react";
 import LocationProvider from "@/providers/LocationService";
+import Colors from "@/components/colorPalette";
 
 export default function RootLayout(): ReactNode {
     const {token, isLoading} = useAuthSession();
 
     if (isLoading) {
-        return <ActivityIndicator animating={true} size={"large"}/>;
+        return (
+            <SafeAreaView
+                style={{
+                    backgroundColor: Colors.background
+                }}
+            >
+                <ActivityIndicator
+                    animating={true}
+                    size={"large"}
+                    style={{}}
+                />
+            </SafeAreaView>
+        );
     }
 
     if (!token?.current) {
