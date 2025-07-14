@@ -24,37 +24,18 @@ const APP_SETTINGS:any = {
             ], defaultValue: 20},
         {name: 'useSignificantChangesOnly', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
         // Application
-        {name: 'stopOnTerminate', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
-        {name: 'startOnBoot', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
         {name: 'heartbeatInterval', group: 'application', dataType: 'integer', inputType: 'select', values: [
                 {label: '1 minute', value: 60},
                 {label: '2 minutes', value: 120},
                 {label: '5 minutes', value: 300},
                 {label: '15 minutes', value: 900},
             ], defaultValue: 60},
-        // Logging & Debug
-        {name: 'debug', group: 'debug', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
-        {name: 'logLevel', group: 'debug', dataType: 'string', inputType: 'select', values:[
-                {label: 'OFF', value: 0},
-                {label: 'ERROR', value: 1},
-                {label: 'WARN', value: 2},
-                {label: 'INFO', value: 3},
-                {label: 'DEBUG', value: 4},
-                {label: 'VERBOSE', value: 5}
-            ], defaultValue: 5},
-        {name: 'logMaxDays', group: 'debug', dataType: 'integer', inputType: 'select', values: [
-                {label: '1 day', value: 1},
-                {label: '2 days', value: 2},
-                {label: '3 days', value: 3},
-                {label: '1 week', value: 7},
-            ], defaultValue: 3}
     ],
     ios: [
         {name: 'preventSuspend', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
     ],
     android: [
         // Application
-        {name: 'enableHeadless', group: 'application', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
         {name: 'timeInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: '0 second', value: 0},
                 {label: '5 seconds', value: 5000},

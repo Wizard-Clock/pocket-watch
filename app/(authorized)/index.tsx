@@ -1,9 +1,9 @@
 import {useRouter} from 'expo-router';
 import {Image as ExpoImage} from 'expo-image';
-import {Appbar} from 'react-native-paper';
+import {Appbar, Button, ActivityIndicator} from 'react-native-paper';
 import {useAuthSession} from "@/providers/AuthService";
-import React, {useState} from "react";
-import {SafeAreaView, View} from "react-native";
+import React, {useEffect, useState} from "react";
+import {SafeAreaView} from "react-native";
 import {useLocationSession} from "@/providers/LocationService";
 import Colors from "@/components/colorPalette";
 import SettingsService from "@/providers/SettingsService";
@@ -14,6 +14,7 @@ export default function HomePage(){
     const settingsService = SettingsService.getInstance();
     const [viewWidth, setViewWidth] = useState(0);
     const [viewHeight, setViewHeight] = useState(0);
+    const [imageURL, setImageURL] = useState("");
 
     // @ts-ignore
     const onLayout=(event)=> {
@@ -42,6 +43,30 @@ export default function HomePage(){
     // @ts-ignore
     let tokenVal= token?.current.token;
     const pocketWatchUrl = settingsService.getSettingValue("url") + "/api/createPocketWatch";
+    const reader = new FileReader();
+
+    const getImageURL = async () => {
+        fetch(pocketWatchUrl, {
+            method: 'GET',
+            headers: {
+                "Authorization": "Bearer " + tokenVal
+            }})
+            .then((response)=> response.blob())
+            .then((response)=> {
+                reader.readAsDataURL(response);
+                reader.onload = () => {
+                    // @ts-ignore
+                    setImageURL(reader.result)
+                }
+            })
+            .catch(err=>{
+                console.log(err);
+            });
+    }
+
+    useEffect(() => {
+        getImageURL();
+    }, []);
 
     return (
         <>
@@ -75,6 +100,7 @@ export default function HomePage(){
                         color={Colors.background}/>
                 </Appbar.Header>
                 <ExpoImage
+                    id="pocketWatch"
                     style={{
                         marginTop: 25,
                         width: viewWidth,
@@ -82,10 +108,7 @@ export default function HomePage(){
                         backgroundColor: Colors.background
                     }}
                     source={{
-                        uri: pocketWatchUrl,
-                        headers: {
-                            "Authorization": "Bearer " + tokenVal
-                        },
+                        uri: imageURL,
                         width: 693,
                         height: 960
                     }}
@@ -93,8 +116,22 @@ export default function HomePage(){
                     contentPosition="center"
                     cachePolicy="none"
                     priority="high"
-
                 />
+                <SafeAreaView
+                    style={{
+                        alignItems: "center"
+                    }}>
+                    <Button
+                        mode="outlined"
+                        textColor={Colors.primary}
+                        style={{
+                            width: "50%",
+                            marginTop: 10
+                        }}
+                        onPress={getImageURL}>
+                        Refresh Watch
+                    </Button>
+                </SafeAreaView>
             </SafeAreaView>
         </>
     )

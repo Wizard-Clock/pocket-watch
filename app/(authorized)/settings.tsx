@@ -142,7 +142,8 @@ export default function SettingsPage() {
             </Appbar.Header>
             <ScrollView
                 style={{
-                    backgroundColor: Colors.background
+                    backgroundColor: Colors.background,
+                    width: "100%"
                 }}
             >
                 <SafeAreaView>
@@ -183,7 +184,6 @@ export default function SettingsPage() {
                     </View>
                     <Text>Dev Section</Text>
                     <View>
-                        {renderPluginSettings('debug')}
                         <ListItem key="locationPing" bottomDivider>
                             <ListItem.Content>
                                 <ListItem.Title>Send Location Ping to Server</ListItem.Title>
