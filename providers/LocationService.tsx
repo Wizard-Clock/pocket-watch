@@ -18,7 +18,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data: { locations }, error }
         }
 
         let tokenVal = await AsyncStorage.getItem("pocket-watch:token");
-        console.log("tokenVal: "+ tokenVal);
         let url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
         for (let location of locations) {
             let response = await fetch(url, {

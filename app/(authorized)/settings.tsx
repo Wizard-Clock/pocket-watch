@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Appbar, Banner, Button, Switch, Text, TextInput} from 'react-native-paper'
 import {useRouter} from "expo-router";
 import {useAuthSession} from "@/providers/AuthService";
-import {SafeAreaView, ScrollView, View} from "react-native";
+import {SafeAreaView, ScrollView, View, Linking} from "react-native";
 import {useLocationSession} from "@/providers/LocationService";
 import SettingsService from "@/providers/SettingsService";
 import { Dropdown } from 'react-native-element-dropdown';
@@ -184,6 +184,17 @@ export default function SettingsPage() {
                     </View>
                     <Text>Dev Section</Text>
                     <View>
+                        <ListItem key="plzdontkill" bottomDivider>
+                            <ListItem.Content>
+                                <ListItem.Title>Android Background Usage</ListItem.Title>
+                                <Button
+                                    mode="contained-tonal"
+                                    onPress={() => Linking.openURL("https://dontkillmyapp.com/")}
+                                    buttonColor={Colors.primary}
+                                    textColor={Colors.background}
+                                >Don't Kill My App</Button>
+                            </ListItem.Content>
+                        </ListItem>
                         <ListItem key="locationPing" bottomDivider>
                             <ListItem.Content>
                                 <ListItem.Title>Send Location Ping to Server</ListItem.Title>
