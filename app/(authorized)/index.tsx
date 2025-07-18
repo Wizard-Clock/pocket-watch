@@ -41,7 +41,7 @@ export default function HomePage(){
     }
 
     // @ts-ignore
-    let tokenVal= token?.current.token;
+    let tokenVal = token?.current.token;
     const pocketWatchUrl = settingsService.getSettingValue("url") + "/api/createPocketWatch";
     const reader = new FileReader();
 

@@ -1,21 +1,11 @@
 /*https://medium.com/@david.ryan.hall/setting-up-a-basic-login-flow-for-an-expo-application-0b62b2b3e448*/
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 import {router} from "expo-router";
-import {
-    createContext,
-    ReactNode,
-    RefObject,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState
-} from 'react';
+import {createContext, ReactNode, RefObject, useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {fetch} from 'expo/fetch';
 import SettingsService from "@/providers/SettingsService";
 
+const WC_API_TOKEN_KEY = 'portkey';
 const AuthContext = createContext<{
     signIn: (url: string, username: string, password: string) => void;
     signOut: () => void
@@ -43,13 +33,15 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
 
     useEffect(() => {
         (async ():Promise<void> => {
-            let tokenUse: string | null;
-            if (Platform.OS === 'web') {
-                tokenUse = await AsyncStorage.getItem('portkey');
-            } else { // mobile
-                tokenUse = await SecureStore.getItemAsync('portkey');
-            }
-            tokenRef.current = tokenUse || '';
+            await SecureStore.getItemAsync(WC_API_TOKEN_KEY).then(result => {
+                if (result) {
+                    tokenRef.current = {
+                        token: result
+                    };
+                } else {
+                    tokenRef.current = '';
+                }
+            });
             setIsLoading(false);
         })()
     }, []);
@@ -86,11 +78,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
 
             if (response.ok) {
                 const jsonToken = await response.json();
-                if (Platform.OS === 'web') {
-                    await AsyncStorage.setItem('portkey', jsonToken.token);
-                } else { // mobile
-                    await SecureStore.setItemAsync('token', jsonToken.token);
-                }
+                await SecureStore.setItemAsync(WC_API_TOKEN_KEY, jsonToken.token);
                 tokenRef.current = jsonToken;
                 settingsService.set("url", url);
                 setIsLoading(false);
@@ -122,11 +110,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
     }, []);
 
     const signOut = useCallback(async () => {
-        if (Platform.OS === 'web') {
-            await AsyncStorage.setItem('portkey', '');
-        } else { // mobile
-            await SecureStore.deleteItemAsync('portkey');
-        }
+        await SecureStore.deleteItemAsync(WC_API_TOKEN_KEY);
         setIsLoading(false);
         tokenRef.current = null;
         router.replace('/login');
