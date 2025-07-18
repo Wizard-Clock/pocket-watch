@@ -137,25 +137,20 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     }
 
     const updateLocationConfig = () => {
-        // @ts-ignore
-        let tokenVal = token?.current.token;
         console.log('Update location config');
         console.log('desiredAccuracy: ' + settingsService.getSettingValue("desiredAccuracy"));
         console.log('timeInterval: ' + settingsService.getSettingValue("timeInterval"));
         console.log('distanceInterval: ' + settingsService.getSettingValue("distanceInterval"));
         console.log('url: ' + settingsService.getSettingValue("url") + "/api/updateUserLocation");
-        // @ts-ignore
-        console.log('Bearer: ' + tokenVal);
+        console.log('Bearer: ' + token?.current.token);
     }
 
     const sendLocationPing = async () => {
-        await Location.getLastKnownPositionAsync().then(result => {
-            console.log("getLastKnownPositionAsync", result);
-            if (result) {
+        await Location.getLastKnownPositionAsync().then(posResult => {
+            console.log("getLastKnownPositionAsync", posResult);
+            if (posResult) {
                 console.log('Sending location ping to the server...');
-                // @ts-ignore
-                let tokenVal= token?.current.token;
-                sendLocationToServer(tokenVal, position);
+                sendLocationToServer(token?.current.token, posResult);
             } else {
                 console.log('No last known location, sending health check instead.');
                 sendServerHealthCheck();
