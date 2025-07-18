@@ -34,7 +34,7 @@ export default function Login(): ReactNode {
         resolver: yupResolver(loginSchema),
         defaultValues: {
             url: settingsService.getSettingValue("url"),
-            username: '',
+            username: settingsService.getSettingValue("username"),
             password: ''
         },
     });

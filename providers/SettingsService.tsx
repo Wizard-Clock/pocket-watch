@@ -6,7 +6,8 @@ const STORAGE_KEY:string = "pocket-watch";
 
 const APP_SETTINGS:any = {
     common: [
-        {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://'},
+        {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'https://'},
+        {name: 'username', group: 'hidden', inputType: 'text', dataType: 'string', defaultValue: ''},
         {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: 'HIGHEST', value: Location.Accuracy.Highest},
                 {label: 'HIGH', value: Location.Accuracy.High},

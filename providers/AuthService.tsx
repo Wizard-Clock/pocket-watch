@@ -81,6 +81,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                 await SecureStore.setItemAsync(WC_API_TOKEN_KEY, jsonToken.token);
                 tokenRef.current = jsonToken;
                 settingsService.set("url", url);
+                settingsService.set("username", username);
                 setIsLoading(false);
                 router.replace('/');
             } else {
