@@ -6,50 +6,24 @@ import {useAuthSession} from "@/providers/AuthService";
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 
 const LOCATION_TASK_NAME = "DOBBY_TRACKING_SERVICE";
-// @ts-ignore
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data: { locations }, error }) => {
+TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
+    if (event.error) {
+        return console.error('[tracking]', 'Something went wrong within the background location task...', event.error);
+    }
     try {
         const now = Date.now();
         console.log(`Got location task call at date: ${new Date(now).toISOString()}`);
-        for (let location of locations) {
-            console.log(`Got location task location of: ${location}`);
-        }
+
+        const locations = (event.data as any).locations as Location.LocationObject[];
+        console.log('[tracking]', 'Received new locations', locations);
 
         let tokenVal = await AsyncStorage.getItem("pocket-watch:token");
-        let url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
         for (let location of locations) {
-            let response = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    location: {
-                        // @ts-ignore
-                        "latitude": location.coords.latitude,
-                        // @ts-ignore
-                        "longitude": location.coords.longitude
-                    }
-                }),
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + tokenVal
-                }
-            });
-            console.log(response);
+            await sendLocationToServer(tokenVal, location);
         }
-    } catch (error) {
-        console.error('Failed to execute the background task:', error);
-        return BackgroundTask.BackgroundTaskResult.Failed;
-    }
-    return BackgroundTask.BackgroundTaskResult.Success;
-});
-
-const BACKGROUND_FETCH_NAME = "KREATURE_TRACKING_SERVICE"
-TaskManager.defineTask(BACKGROUND_FETCH_NAME, async () => {
-    try {
-        const now = Date.now();
-        console.log(`Got background task call at date: ${new Date(now).toISOString()}`);
-
     } catch (error) {
         console.error('Failed to execute the background task:', error);
         return BackgroundTask.BackgroundTaskResult.Failed;
@@ -76,21 +50,40 @@ export function useLocationSession() {
     return useContext(LocationContext);
 }
 
+async function sendLocationToServer(tokenVal: string | null, location: Location.LocationObject) {
+    let url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
+    let response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+            location: {
+                "latitude": location.coords.latitude,
+                "longitude": location.coords.longitude
+            }
+        }),
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + tokenVal
+        }
+    });
+    console.log(response);
+}
+
 export default function LocationProvider({children}:{children: ReactNode}): ReactNode {
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
 
     useEffect(() => {
-        const requestPermissions = async () => {
+        const requestPermAndNotif = async () => {
             try {
                 await Location.requestForegroundPermissionsAsync();
                 await Location.requestBackgroundPermissionsAsync();
+                await Notifications.requestPermissionsAsync();
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
-        requestPermissions();
+        requestPermAndNotif();
     });
 
     const toggleLocationService = () => {
@@ -154,25 +147,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
 
         // @ts-ignore
         let tokenVal= token?.current.token;
-        console.log("tokenVal: "+ tokenVal);
-
-        const url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
-        let response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify({
-                location: {
-                    // @ts-ignore
-                    "latitude": position.coords.latitude,
-                    // @ts-ignore
-                    "longitude": position.coords.longitude
-                }
-            }),
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + tokenVal
-            }
-        });
-        console.log(response);
+        await sendLocationToServer(tokenVal, position);
     }
 
     return (
