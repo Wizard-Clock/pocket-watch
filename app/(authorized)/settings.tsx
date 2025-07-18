@@ -100,7 +100,7 @@ export default function SettingsPage() {
                         labelField="label"
                         valueField="value"
                         value={settingsService.getSettingValue(setting.name)}
-                        onChange={(value) => onChangeCallback(setting.name, value)}
+                        onChange={(value) => onChangeCallback(setting.name, value.value)}
                         disable={locationSession.locationStarted}
                     />
                 </ListItem.Content>

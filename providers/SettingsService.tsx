@@ -157,6 +157,6 @@ export default class SettingsService {
      * Persist the application settings to AsyncStorage
      */
     _saveSettings() {
-        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings));
+        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
     }
 }

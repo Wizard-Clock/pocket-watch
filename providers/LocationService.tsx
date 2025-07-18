@@ -1,5 +1,4 @@
-import {createContext, ReactNode, useContext, useEffect, useState} from "react"
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 import SettingsService from "@/providers/SettingsService"
 const settingsService = SettingsService.getInstance();
 import {useAuthSession} from "@/providers/AuthService";
@@ -7,8 +6,10 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
+import * as SecureStore from "expo-secure-store";
 
 const LOCATION_TASK_NAME = "DOBBY_TRACKING_SERVICE";
+const WC_API_TOKEN_KEY = 'portkey';
 TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
     if (event.error) {
         return console.error('[tracking]', 'Something went wrong within the background location task...', event.error);
@@ -20,7 +21,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
         const locations = (event.data as any).locations as Location.LocationObject[];
         console.log('[tracking]', 'Received new locations', locations);
 
-        let tokenVal = await AsyncStorage.getItem("pocket-watch:token");
+        let tokenVal = await SecureStore.getItemAsync(WC_API_TOKEN_KEY);
         for (let location of locations) {
             await sendLocationToServer(tokenVal, location);
         }
@@ -112,10 +113,6 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 return;
             }
 
-            // @ts-ignore
-            let tokenVal= token?.current.token;
-            console.log("tokenVal: "+ tokenVal);
-            AsyncStorage.setItem("pocket-watch:token", tokenVal);
             Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
                 accuracy: settingsService.getSettingValue("desiredAccuracy"),
                 timeInterval: settingsService.getSettingValue("timeInterval"),
@@ -126,7 +123,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                     notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
                     killServiceOnDestroy: false
                 },
-            }).then(() => setLocationServiceState(true));
+            }).then(() => setLocationServiceState(true)).catch(e => console.error(e));
         }
     }
 
