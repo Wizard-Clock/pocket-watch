@@ -68,6 +68,14 @@ async function sendLocationToServer(tokenVal: string | null, location: Location.
     console.log(response);
 }
 
+async function sendServerHealthCheck() {
+    let url = settingsService.getSettingValue("url") + "/api/health";
+    let response = await fetch(url, {
+        method: 'GET',
+    });
+    console.log(response);
+}
+
 export default function LocationProvider({children}:{children: ReactNode}): ReactNode {
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
@@ -141,13 +149,18 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     }
 
     const sendLocationPing = async () => {
-        console.log('Sending location ping to the server...');
-        let position= await Location.getCurrentPositionAsync();
-        console.log('position: ' + position);
-
-        // @ts-ignore
-        let tokenVal= token?.current.token;
-        await sendLocationToServer(tokenVal, position);
+        await Location.getLastKnownPositionAsync().then(result => {
+            console.log("getLastKnownPositionAsync", result);
+            if (result) {
+                console.log('Sending location ping to the server...');
+                // @ts-ignore
+                let tokenVal= token?.current.token;
+                await sendLocationToServer(tokenVal, position);
+            } else {
+                console.log('No last known location, sending health check instead.');
+                await sendServerHealthCheck();
+            }
+        });
     }
 
     return (
