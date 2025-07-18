@@ -6,7 +6,7 @@ const STORAGE_KEY:string = "pocket-watch";
 
 const APP_SETTINGS:any = {
     common: [
-        {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://your.server.com/endpoint'},
+        {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'http://'},
         {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: 'HIGHEST', value: Location.Accuracy.Highest},
                 {label: 'HIGH', value: Location.Accuracy.High},
@@ -125,7 +125,6 @@ export default class SettingsService {
      * @param {Function} callback
      */
     async _loadApplicationSettings(callback?:Function) {
-        await AsyncStorage.clear();
         await AsyncStorage.getItem(STORAGE_KEY + ":settings").then((value) => {
             if (value) {
                 this.appSettings = JSON.parse(value);
@@ -157,6 +156,6 @@ export default class SettingsService {
      * Persist the application settings to AsyncStorage
      */
     _saveSettings() {
-        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings, null));
+        AsyncStorage.setItem(STORAGE_KEY + ":settings", JSON.stringify(this.appSettings));
     }
 }

@@ -1,8 +1,14 @@
 {
   "expo": {
-    "name": "pocket-watch",
+    "name": "Pocket Watch",
+    "description": "The companion app for the Wizarding Clock Project. Allows for user location reporting to the clock server.",
     "slug": "pocket-watch",
     "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "githubUrl": "https://github.com/Wizard-Clock/pocket-watch",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "pocketwatch",
@@ -31,12 +37,14 @@
         "FOREGROUND_SERVICE_LOCATION"
       ]
     },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow Pocket Watch to access your Face ID biometric data."
+        }
+      ],
       [
         "expo-location",
         {

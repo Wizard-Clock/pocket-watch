@@ -1,6 +1,6 @@
 import {useRouter} from 'expo-router';
 import {Image as ExpoImage} from 'expo-image';
-import {Appbar, Button, ActivityIndicator} from 'react-native-paper';
+import {Appbar, Button} from 'react-native-paper';
 import {useAuthSession} from "@/providers/AuthService";
 import React, {useEffect, useState} from "react";
 import {SafeAreaView} from "react-native";

@@ -6,9 +6,12 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import {ActivityIndicator, Image, SafeAreaView} from "react-native";
 import {ReactNode} from "react";
 import Colors from '@/components/colorPalette'
+import SettingsService from "@/providers/SettingsService";
 
 export default function Login(): ReactNode {
     const {signIn, isLoading, genError, token} = useAuthSession();
+    const settingsService = SettingsService.getInstance();
+
     let url;
     let username;
     let password;
@@ -30,7 +33,7 @@ export default function Login(): ReactNode {
     } = useForm({
         resolver: yupResolver(loginSchema),
         defaultValues: {
-            url: '',
+            url: settingsService.getSettingValue("url"),
             username: '',
             password: ''
         },
