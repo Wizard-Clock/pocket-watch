@@ -155,10 +155,10 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 console.log('Sending location ping to the server...');
                 // @ts-ignore
                 let tokenVal= token?.current.token;
-                await sendLocationToServer(tokenVal, position);
+                sendLocationToServer(tokenVal, position);
             } else {
                 console.log('No last known location, sending health check instead.');
-                await sendServerHealthCheck();
+                sendServerHealthCheck();
             }
         });
     }
