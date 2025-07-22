@@ -12,8 +12,7 @@ export default function HomePage(){
     const {token, signOut} = useAuthSession();
     const locationSession = useLocationSession();
     const settingsService = SettingsService.getInstance();
-    const [viewWidth, setViewWidth] = useState(0);
-    const [viewHeight, setViewHeight] = useState(0);
+    const [viewDim, setViewDim] = useState({width: 0, height: 0});
     const [imageURL, setImageURL] = useState("");
     const [imgLoading, setImgLoading] = useState(false);
 
@@ -21,8 +20,7 @@ export default function HomePage(){
     const onLayout=(event)=> {
         const {height, width} = event.nativeEvent.layout;
         let calcDimension = calculateAspectRatioFit(width, height);
-        setViewHeight(calcDimension.height);
-        setViewWidth(calcDimension.width);
+        setViewDim({width: calcDimension.width, height: calcDimension.height});
     }
 
     /**
@@ -103,12 +101,12 @@ export default function HomePage(){
                 </Appbar.Header>
                 <ActivityIndicator
                     animating={imgLoading}
-                    size={viewWidth/2}
+                    size={viewDim.width/2}
                     color={Colors.primary}
                     style={{
                         position: "absolute",
-                        top: viewHeight/1.5,
-                        left: viewWidth/4,
+                        top: viewDim.height/1.5,
+                        left: viewDim.width/4,
                         zIndex: 3
                     }}
                 />
@@ -117,8 +115,8 @@ export default function HomePage(){
                     style={{
                         position: "relative",
                         marginTop: 25,
-                        width: viewWidth,
-                        height: viewHeight,
+                        width: viewDim.width,
+                        height: viewDim.height,
                         backgroundColor: Colors.background,
                         zIndex: 2
                     }}
