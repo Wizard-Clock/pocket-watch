@@ -139,6 +139,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
         console.log('timeInterval: ' + settingsService.getSettingValue("timeInterval"));
         console.log('distanceInterval: ' + settingsService.getSettingValue("distanceInterval"));
         console.log('url: ' + settingsService.getSettingValue("url") + "/api/updateUserLocation");
+        // @ts-ignore
         console.log('Bearer: ' + token?.current.token);
     }
 
@@ -147,6 +148,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
             console.log("getLastKnownPositionAsync", posResult);
             if (posResult) {
                 console.log('Sending location ping to the server...');
+                // @ts-ignore
                 sendLocationToServer(token?.current.token, posResult);
             } else {
                 console.log('No last known location, sending health check instead.');

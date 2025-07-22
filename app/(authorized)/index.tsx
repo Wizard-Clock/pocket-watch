@@ -1,6 +1,6 @@
 import {useRouter} from 'expo-router';
 import {Image as ExpoImage} from 'expo-image';
-import {Appbar, Button} from 'react-native-paper';
+import {ActivityIndicator, Appbar, Button} from 'react-native-paper';
 import {useAuthSession} from "@/providers/AuthService";
 import React, {useEffect, useState} from "react";
 import {SafeAreaView} from "react-native";
@@ -15,6 +15,7 @@ export default function HomePage(){
     const [viewWidth, setViewWidth] = useState(0);
     const [viewHeight, setViewHeight] = useState(0);
     const [imageURL, setImageURL] = useState("");
+    const [imgLoading, setImgLoading] = useState(false);
 
     // @ts-ignore
     const onLayout=(event)=> {
@@ -55,8 +56,9 @@ export default function HomePage(){
             .then((response)=> {
                 reader.readAsDataURL(response);
                 reader.onload = () => {
+                    setImgLoading(false);
                     // @ts-ignore
-                    setImageURL(reader.result)
+                    setImageURL(reader.result);
                 }
             })
             .catch(err=>{
@@ -99,13 +101,26 @@ export default function HomePage(){
                         onPress={() => useRouter().navigate('/settings')}
                         color={Colors.background}/>
                 </Appbar.Header>
+                <ActivityIndicator
+                    animating={imgLoading}
+                    size={viewWidth/2}
+                    color={Colors.primary}
+                    style={{
+                        position: "absolute",
+                        top: viewHeight/1.5,
+                        left: viewWidth/4,
+                        zIndex: 3
+                    }}
+                />
                 <ExpoImage
                     id="pocketWatch"
                     style={{
+                        position: "relative",
                         marginTop: 25,
                         width: viewWidth,
                         height: viewHeight,
-                        backgroundColor: Colors.background
+                        backgroundColor: Colors.background,
+                        zIndex: 2
                     }}
                     source={{
                         uri: imageURL,
@@ -128,7 +143,12 @@ export default function HomePage(){
                             width: "50%",
                             marginTop: 10
                         }}
-                        onPress={getImageURL}>
+                        disabled={imgLoading}
+                        onPress={() => {
+                            setImgLoading(true);
+                            getImageURL();
+                        }}
+                    >
                         Refresh Watch
                     </Button>
                 </SafeAreaView>
