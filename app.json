@@ -46,6 +46,12 @@
         }
       ],
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon-white.png"
+        }
+      ],
+      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Pocket Watch to use your location.",

@@ -19,10 +19,11 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
         console.log(`Got location task call at date: ${new Date(now).toISOString()}`);
 
         const locations = (event.data as any).locations as Location.LocationObject[];
-        console.log('[tracking]', 'Received new locations', locations);
+        console.log('[tracking]', 'Received new locations');
 
         let tokenVal = await SecureStore.getItemAsync(WC_API_TOKEN_KEY);
         for (let location of locations) {
+            console.log(`[tracking] Location:`, location);
             await sendLocationToServer(tokenVal, location);
         }
     } catch (error) {
@@ -66,7 +67,7 @@ async function sendLocationToServer(tokenVal: string | null, location: Location.
             "Authorization": "Bearer " + tokenVal
         }
     });
-    console.log(response);
+    console.log(response.status);
 }
 
 async function sendServerHealthCheck() {
@@ -81,6 +82,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
+    Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((result) => {setLocationStarted(result)});
 
     useEffect(() => {
         const requestPermAndNotif = async () => {
