@@ -37,12 +37,14 @@ const LocationContext = createContext<{
     toggleLocationService: () => void
     updateLocationConfig: () => void
     sendLocationPing: () => void
+    resyncLocationServices: () => void
     locationStarted: boolean
     locationIcon: string;
 }>({
     toggleLocationService: () => null,
     updateLocationConfig: () => null,
     sendLocationPing: () => null,
+    resyncLocationServices: () => null,
     locationStarted: false,
     locationIcon: "play-circle",
 });
@@ -82,7 +84,6 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
-    Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((result) => {setLocationStarted(result)});
 
     useEffect(() => {
         const requestPermAndNotif = async () => {
@@ -96,6 +97,11 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
         }
         requestPermAndNotif();
     });
+
+    const resyncLocationServices = () => {
+        console.log("Sync location service state");
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((result) => {setLocationServiceState(result)});
+    }
 
     const toggleLocationService = () => {
         console.log("Toggled location service");
@@ -165,6 +171,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 toggleLocationService,
                 updateLocationConfig,
                 sendLocationPing,
+                resyncLocationServices,
                 locationStarted,
                 locationIcon
             }}

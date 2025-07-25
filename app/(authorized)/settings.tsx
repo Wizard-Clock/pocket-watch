@@ -13,6 +13,7 @@ export default function SettingsPage() {
     const {signOut} = useAuthSession();
     const locationSession = useLocationSession();
     const settingsService = SettingsService.getInstance();
+    const onLayout= () => {locationSession.resyncLocationServices()}
 
     const renderPluginSettings = (category:string) => {
         return settingsService.getApplicationSettings(category).map((setting:any, i: any) => {
@@ -146,7 +147,9 @@ export default function SettingsPage() {
                     width: "100%"
                 }}
             >
-                <SafeAreaView>
+                <SafeAreaView
+                    onLayout={onLayout}
+                >
                     <Banner
                         visible={locationSession.locationStarted}
                         actions={[{

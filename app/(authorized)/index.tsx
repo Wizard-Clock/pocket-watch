@@ -19,6 +19,7 @@ export default function HomePage(){
     // @ts-ignore
     const onLayout=(event)=> {
         const {height, width} = event.nativeEvent.layout;
+        locationSession.resyncLocationServices();
         let calcDimension = calculateAspectRatioFit(width, height);
         setViewDim({width: calcDimension.width, height: calcDimension.height});
     }
