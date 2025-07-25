@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from "react-native";
-import * as Location from 'expo-location'
+import * as Location from 'expo-location';
 
 const STORAGE_KEY:string = "pocket-watch";
 
