@@ -22,7 +22,7 @@ const APP_SETTINGS:any = {
                 {label: '50 m', value: 50},
                 {label: '100 m', value: 100},
                 {label: '500 m', value: 500},
-            ], defaultValue: 20},
+            ], defaultValue: 0},
         {name: 'useSignificantChangesOnly', group: 'geolocation', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: false},
         // Application
         {name: 'heartbeatInterval', group: 'application', dataType: 'integer', inputType: 'select', values: [
@@ -45,7 +45,7 @@ const APP_SETTINGS:any = {
                 {label: '5 minutes', value: 300000},
                 {label: '15 minutes', value: 900000},
                 {label: '30 minutes', value: 1800000},
-            ], defaultValue: 0}
+            ], defaultValue: 5000}
     ]
 };
 
