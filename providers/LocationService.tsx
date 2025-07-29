@@ -21,11 +21,14 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
         const locations = (event.data as any).locations as Location.LocationObject[];
         console.log('[tracking]', 'Received new locations');
 
+        // Sort location list based of newest location first
+        locations.sort((a, b) => b.timestamp - a.timestamp);
+        let mostRecentLocation = locations[0];
+        console.log(`[tracking] Location:`, mostRecentLocation);
+
         let tokenVal = await SecureStore.getItemAsync(WC_API_TOKEN_KEY);
-        for (let location of locations) {
-            console.log(`[tracking] Location:`, location);
-            await sendLocationToServer(tokenVal, location);
-        }
+
+        await sendLocationToServer(tokenVal, mostRecentLocation);
     } catch (error) {
         console.error('Failed to execute the background task:', error);
         return BackgroundTask.BackgroundTaskResult.Failed;
