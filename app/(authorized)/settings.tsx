@@ -177,10 +177,10 @@ export default function SettingsPage() {
                     <View>
                         {renderPluginSettings('geolocation')}
                     </View>
-                    <Text>HTTP &amp; Persistence</Text>
-                    <View>
-                        {renderPluginSettings('http')}
-                    </View>
+                    {/*<Text>HTTP &amp; Persistence</Text>*/}
+                    {/*<View>*/}
+                    {/*    {renderPluginSettings('http')}*/}
+                    {/*</View>*/}
                     <Text>Dev Section</Text>
                     <View>
                         <ListItem key="webClient" bottomDivider>
