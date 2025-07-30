@@ -7,7 +7,6 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from "expo-secure-store";
-import Colors from "@/components/colorPalette";
 
 const LOCATION_TASK_NAME = "DOBBY_TRACKING_SERVICE";
 const WC_API_TOKEN_KEY = 'portkey';
@@ -150,7 +149,6 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                     foregroundService: {
                         notificationTitle: 'Dobby is Following',
                         notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
-                        notificationColor: Colors.primary,
                         killServiceOnDestroy: false
                     },
                 }).then(() => setLocationServiceState(true, true)).catch(e => console.error(e));
