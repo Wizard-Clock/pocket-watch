@@ -1,6 +1,6 @@
 import {useRouter} from 'expo-router';
 import {Image as ExpoImage} from 'expo-image';
-import {ActivityIndicator, Appbar, Button} from 'react-native-paper';
+import {ActivityIndicator, Appbar, Button, Portal, Snackbar} from 'react-native-paper';
 import {useAuthSession} from "@/providers/AuthService";
 import React, {useEffect, useState} from "react";
 import {SafeAreaView} from "react-native";
@@ -92,10 +92,6 @@ export default function HomePage(){
                     />
                     <Appbar.Content title="Pocket Watch" color={Colors.background}/>
                     <Appbar.Action
-                        icon="logout"
-                        onPress={signOut}
-                        color={Colors.background} />
-                    <Appbar.Action
                         icon="cog"
                         onPress={() => useRouter().navigate('/settings')}
                         color={Colors.background}/>
@@ -151,6 +147,18 @@ export default function HomePage(){
                         Refresh Watch
                     </Button>
                 </SafeAreaView>
+                <Portal>
+                    <Snackbar
+                        visible={locationSession.portalSnackbarVisible}
+                        onDismiss={() => locationSession.setPortalSnackbarVisible(false)}
+                        action={{
+                            textColor: Colors.secondary,
+                            label: 'Dismiss'
+                        }}
+                    >
+                        {locationSession.portalSnackbarText}
+                    </Snackbar>
+                </Portal>
             </SafeAreaView>
         </>
     )

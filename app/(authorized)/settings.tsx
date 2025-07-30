@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Appbar, Banner, Button, Switch, Text, TextInput} from 'react-native-paper'
+import {Appbar, Banner, Button, Portal, Snackbar, Switch, Text, TextInput} from 'react-native-paper'
 import {useRouter} from "expo-router";
 import {useAuthSession} from "@/providers/AuthService";
 import {SafeAreaView, ScrollView, View, Linking} from "react-native";
@@ -181,12 +181,19 @@ export default function SettingsPage() {
                     <View>
                         {renderPluginSettings('http')}
                     </View>
-                    <Text>Application</Text>
-                    <View>
-                        {renderPluginSettings('application')}
-                    </View>
                     <Text>Dev Section</Text>
                     <View>
+                        <ListItem key="webClient" bottomDivider>
+                            <ListItem.Content>
+                                <ListItem.Title>Server Web Client</ListItem.Title>
+                                <Button
+                                    mode="contained-tonal"
+                                    onPress={() => Linking.openURL(settingsService.getSettingValue("url"))}
+                                    buttonColor={Colors.primary}
+                                    textColor={Colors.background}
+                                >Server Web Client</Button>
+                            </ListItem.Content>
+                        </ListItem>
                         <ListItem key="plzdontkill" bottomDivider>
                             <ListItem.Content>
                                 <ListItem.Title>Android Background Usage</ListItem.Title>
@@ -195,7 +202,7 @@ export default function SettingsPage() {
                                     onPress={() => Linking.openURL("https://dontkillmyapp.com/")}
                                     buttonColor={Colors.primary}
                                     textColor={Colors.background}
-                                >Don't Kill My App</Button>
+                                >Android Optimization Info</Button>
                             </ListItem.Content>
                         </ListItem>
                         <ListItem key="locationPing" bottomDivider>
@@ -211,6 +218,18 @@ export default function SettingsPage() {
                             </ListItem.Content>
                         </ListItem>
                     </View>
+                    <Portal>
+                        <Snackbar
+                            visible={locationSession.portalSnackbarVisible}
+                            onDismiss={() => locationSession.setPortalSnackbarVisible(false)}
+                            action={{
+                                textColor: Colors.secondary,
+                                label: 'Dismiss'
+                            }}
+                        >
+                            {locationSession.portalSnackbarText}
+                        </Snackbar>
+                    </Portal>
                 </SafeAreaView>
             </ScrollView>
         </>

@@ -42,7 +42,10 @@ const LocationContext = createContext<{
     sendLocationPing: () => void
     resyncLocationServices: () => void
     locationStarted: boolean
-    locationIcon: string;
+    locationIcon: string
+    portalSnackbarVisible: boolean
+    portalSnackbarText: string
+    setPortalSnackbarVisible: (state:boolean) => void;
 }>({
     toggleLocationService: () => null,
     updateLocationConfig: () => null,
@@ -50,6 +53,9 @@ const LocationContext = createContext<{
     resyncLocationServices: () => null,
     locationStarted: false,
     locationIcon: "play-circle",
+    portalSnackbarVisible: false,
+    portalSnackbarText: '',
+    setPortalSnackbarVisible: () => null
 });
 
 // Access the context as a hook
@@ -87,6 +93,8 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
     const [locationStarted, setLocationStarted] = useState(false);
+    const [portalSnackbarVisible, setPortalSnackbarVisible] = useState(false);
+    const [portalSnackbarText, setPortalSnackbarText] = useState("");
 
     useEffect(() => {
         const requestPermAndNotif = async () => {
@@ -103,44 +111,66 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
 
     const resyncLocationServices = () => {
         console.log("Sync location service state");
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((result) => {setLocationServiceState(result)});
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((result) => {setLocationServiceState(result, false)});
+    }
+
+    const handleSnackbar= (isVisible:boolean, text:string) => {
+        setPortalSnackbarVisible(isVisible);
+        setPortalSnackbarText(text);
     }
 
     const toggleLocationService = () => {
-        console.log("Toggled location service");
-        if (locationStarted) {
-            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-                .then(() => setLocationServiceState(false));
-        } else {
-            if (!Location.getBackgroundPermissionsAsync()) {
-                console.log("location tracking denied");
-                Location.requestBackgroundPermissionsAsync();
-                return;
-            }
-
-            const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-            if (!isTaskDefined) {
-                console.log("Task is not defined");
-                return;
-            }
-
-            Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-                accuracy: settingsService.getSettingValue("desiredAccuracy"),
-                timeInterval: settingsService.getSettingValue("timeInterval"),
-                distanceInterval: settingsService.getSettingValue("distanceInterval"),
-                showsBackgroundLocationIndicator: true, // iOS only.  Shows a blue bar when in background.  Requires background location capability in iOS.
-                foregroundService: {
-                    notificationTitle: 'Dobby is Following',
-                    notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
-                    killServiceOnDestroy: false
-                },
-            }).then(() => setLocationServiceState(true)).catch(e => console.error(e));
+        if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+            console.log("Task is not defined");
+            return;
         }
+
+        console.log("Toggled location service");
+        setLocationIcon('swap-horizontal-circle');
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((isStarted) => {
+            if (isStarted) {
+                handleSnackbar(true, "Stopping Location Reporting.");
+                Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+                    .then(() => setLocationServiceState(false, true));
+            } else {
+                handleSnackbar(true, "Starting Location Reporting.");
+                if (!Location.getBackgroundPermissionsAsync()) {
+                    console.log("location tracking denied: background permission denied.");
+                    Location.requestBackgroundPermissionsAsync();
+                    setLocationServiceState(false, true);
+                    return;
+                }
+
+                Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+                    accuracy: settingsService.getSettingValue("desiredAccuracy"),
+                    timeInterval: settingsService.getSettingValue("timeInterval"),
+                    distanceInterval: settingsService.getSettingValue("distanceInterval"),
+                    showsBackgroundLocationIndicator: true,
+                    foregroundService: {
+                        notificationTitle: 'Dobby is Following',
+                        notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
+                        killServiceOnDestroy: false
+                    },
+                }).then(() => setLocationServiceState(true, true)).catch(e => console.error(e));
+            }
+        });
     }
 
-    const setLocationServiceState = (value:boolean) => {
+    const setLocationServiceState = (value:boolean, effectSnackbar:boolean) => {
         setLocationStarted(value);
-        setLocationIcon(value ? 'stop-circle' : 'play-circle');
+        setTimeout(() => {
+            setLocationIcon(value ? 'stop-circle' : 'play-circle');
+        }, 1000);
+
+        if (effectSnackbar) {
+            setPortalSnackbarVisible(false);
+            let snackText = "Location Reporting successfully " + (value ? "started." : "stopped.");
+            handleSnackbar(true, snackText);
+
+            setTimeout(() => {
+                handleSnackbar(false, "");
+            }, 3000);
+        }
         console.log('tracking started?', value);
     }
 
@@ -176,7 +206,10 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 sendLocationPing,
                 resyncLocationServices,
                 locationStarted,
-                locationIcon
+                locationIcon,
+                portalSnackbarVisible,
+                portalSnackbarText,
+                setPortalSnackbarVisible
             }}
         >
             {children}
