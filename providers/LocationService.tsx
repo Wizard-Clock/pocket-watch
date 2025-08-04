@@ -7,10 +7,10 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from "expo-secure-store";
-
-const LOCATION_TASK_NAME = "DOBBY_TRACKING_SERVICE";
 const WC_API_TOKEN_KEY = 'portkey';
-TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
+
+const BACKGROUND_TASK_NAME = "DOBBY_TRACKING_SERVICE";
+TaskManager.defineTask(BACKGROUND_TASK_NAME, async (event) => {
     if (event.error) {
         return console.error('[tracking]', 'Something went wrong within the background location task...', event.error);
     }
@@ -28,9 +28,30 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async (event) => {
 
         let tokenVal = await SecureStore.getItemAsync(WC_API_TOKEN_KEY);
 
-        await sendLocationToServer(tokenVal, mostRecentLocation);
+        await sendLocationToServer(tokenVal, mostRecentLocation, false);
     } catch (error) {
-        console.error('Failed to execute the background task:', error);
+        return console.error('Failed to execute the background task:', error);
+    }
+});
+
+const HEARTBEAT_TASK_NAME = "HORCRUX_HEARTBEAT_SERVICE";
+TaskManager.defineTask(HEARTBEAT_TASK_NAME, async (event) => {
+    try {
+        if (event.error) {
+            return console.error('[heartbeat]', 'Something went wrong within the background location task...', event.error);
+        }
+        console.log(`Got heartbeat task call at date: ${new Date(Date.now()).toISOString()}`);
+        await Location.getCurrentPositionAsync({
+            accuracy: settingsService.getSettingValue("desiredAccuracy"),
+            timeInterval: settingsService.getSettingValue("timeInterval"),
+            distanceInterval: settingsService.getSettingValue("distanceInterval")
+        }).then(async (position) => {
+            console.log(`[heartbeat] Location:`, position);
+            let tokenVal = await SecureStore.getItemAsync(WC_API_TOKEN_KEY);
+            await sendLocationToServer(tokenVal, position, true);
+        });
+    } catch (error) {
+        console.error('Failed to execute the heartbeat task:', error);
         return BackgroundTask.BackgroundTaskResult.Failed;
     }
     return BackgroundTask.BackgroundTaskResult.Success;
@@ -63,7 +84,7 @@ export function useLocationSession() {
     return useContext(LocationContext);
 }
 
-async function sendLocationToServer(tokenVal: string | null, location: Location.LocationObject) {
+async function sendLocationToServer(tokenVal: string | null, location: Location.LocationObject, isHeartbeat: boolean) {
     let url = settingsService.getSettingValue("url") + "/api/updateUserLocation";
     let response = await fetch(url, {
         method: 'POST',
@@ -71,7 +92,8 @@ async function sendLocationToServer(tokenVal: string | null, location: Location.
             location: {
                 "latitude": location.coords.latitude,
                 "longitude": location.coords.longitude
-            }
+            },
+            heartbeat: isHeartbeat
         }),
         headers: {
             "Content-Type": "application/json",
@@ -111,7 +133,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
 
     const resyncLocationServices = () => {
         console.log("Sync location service state");
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((result) => {setLocationServiceState(result, false)});
+        Location.hasStartedLocationUpdatesAsync(BACKGROUND_TASK_NAME).then((result) => {setLocationServiceState(result, false)});
     }
 
     const handleSnackbar= (isVisible:boolean, text:string) => {
@@ -119,18 +141,35 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
         setPortalSnackbarText(text);
     }
 
+    const handleLocationHeartbeat=(startService:boolean) => {
+        if (settingsService.getSettingValue("enableHeartbeat")) {
+            if (startService) {
+                BackgroundTask.registerTaskAsync(HEARTBEAT_TASK_NAME, {
+                    minimumInterval: settingsService.getSettingValue("minimumHeartbeatInterval")
+                }).then(() => {
+                    console.log("Horcrux Created: location heartbeat enabled every " + settingsService.getSettingValue("minimumHeartbeatInterval") + " minutes.");
+                });
+            } else {
+                BackgroundTask.unregisterTaskAsync(HEARTBEAT_TASK_NAME).then(() => {
+                    console.log("Horcrux Destroyed: location heartbeat disabled.");
+                });
+            }
+        }
+    }
+
     const toggleLocationService = () => {
-        if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+        if (!TaskManager.isTaskDefined(BACKGROUND_TASK_NAME)) {
             console.log("Task is not defined");
             return;
         }
 
         console.log("Toggled location service");
         setLocationIcon('swap-horizontal-circle');
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then((isStarted) => {
+        Location.hasStartedLocationUpdatesAsync(BACKGROUND_TASK_NAME).then((isStarted) => {
             if (isStarted) {
                 handleSnackbar(true, "Stopping Location Reporting.");
-                Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+                handleLocationHeartbeat(false);
+                Location.stopLocationUpdatesAsync(BACKGROUND_TASK_NAME)
                     .then(() => setLocationServiceState(false, true));
             } else {
                 handleSnackbar(true, "Starting Location Reporting.");
@@ -140,8 +179,8 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                     setLocationServiceState(false, true);
                     return;
                 }
-
-                Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+                handleLocationHeartbeat(true);
+                Location.startLocationUpdatesAsync(BACKGROUND_TASK_NAME, {
                     accuracy: settingsService.getSettingValue("desiredAccuracy"),
                     timeInterval: settingsService.getSettingValue("timeInterval"),
                     distanceInterval: settingsService.getSettingValue("distanceInterval"),
@@ -190,7 +229,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
             if (posResult) {
                 console.log('Sending location ping to the server...');
                 // @ts-ignore
-                sendLocationToServer(token?.current.token, posResult);
+                sendLocationToServer(token?.current.token, posResult, false);
             } else {
                 console.log('No last known location, sending health check instead.');
                 sendServerHealthCheck();

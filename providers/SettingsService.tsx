@@ -22,20 +22,26 @@ const APP_SETTINGS:any = {
                 {label: '50 m', value: 50},
                 {label: '100 m', value: 100},
                 {label: '500 m', value: 500},
-            ], defaultValue: 0}
+            ], defaultValue: 0},
+        {name: 'enableHeartbeat', group: 'heartbeat', dataType: 'boolean', inputType: 'toggle', values: [true, false], defaultValue: true},
     ],
     android: [
-        // Application
         {name: 'timeInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: '0 second', value: 0},
                 {label: '5 seconds', value: 5000},
                 {label: '30 seconds', value: 30000},
                 {label: '1 minute', value: 60000},
+                {label: '2 1/2 minutes', value: 150000},
                 {label: '5 minutes', value: 300000},
                 {label: '15 minutes', value: 900000},
-                {label: '30 minutes', value: 1800000},
-            ], defaultValue: 5000}
-    ]
+            ], defaultValue: 5000},
+        {name: 'minimumHeartbeatInterval', group: 'heartbeat', dataType: 'integer', inputType: 'select', values: [
+                {label: '15 minutes', value: 15},
+                {label: '30 minutes', value: 30},
+                {label: '1 hour', value: 60},
+            ], defaultValue: 15}
+    ],
+    ios: []
 };
 
 let instance:any = null;
@@ -101,7 +107,6 @@ export default class SettingsService {
 
     getApplicationSettings(group:any) {
         if (group !== undefined) {
-            let settings = [];
             let items = [].concat(APP_SETTINGS.common).concat(APP_SETTINGS[this.platform]);
             return items.filter((setting:any) => { return setting.group === group; });
         } else {

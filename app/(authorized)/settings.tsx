@@ -182,6 +182,10 @@ export default function SettingsPage() {
                     <View>
                         {renderPluginSettings('geolocation')}
                     </View>
+                    <Text>Heartbeat</Text>
+                    <View>
+                        {renderPluginSettings('heartbeat')}
+                    </View>
                     {/*<Text>HTTP &amp; Persistence</Text>*/}
                     {/*<View>*/}
                     {/*    {renderPluginSettings('http')}*/}
