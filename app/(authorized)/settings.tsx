@@ -8,6 +8,7 @@ import SettingsService from "@/providers/SettingsService";
 import { Dropdown } from 'react-native-element-dropdown';
 import {ListItem} from "react-native-elements";
 import Colors from "@/components/colorPalette";
+import * as BackgroundTask from 'expo-background-task';
 import * as Application from 'expo-application';
 
 export default function SettingsPage() {
@@ -117,6 +118,9 @@ export default function SettingsPage() {
         locationSession.updateLocationConfig();
     }
 
+    const triggerTaskForTesting = async () => {
+        await BackgroundTask.triggerTaskWorkerForTestingAsync().catch(error => {console.log(error)});
+    };
 
     return (
         <>
@@ -215,6 +219,20 @@ export default function SettingsPage() {
                                         buttonColor={Colors.primary}
                                         textColor={Colors.background}
                                     >Location Ping</Button>
+                            </ListItem.Content>
+                        </ListItem>
+                        <ListItem key="triggerBackground" bottomDivider>
+                            <ListItem.Content>
+                                <ListItem.Title>Trigger Background Tasks</ListItem.Title>
+                                <Button
+                                    mode="contained-tonal"
+                                    onPress={() => {
+                                        BackgroundTask.triggerTaskWorkerForTestingAsync()
+                                            .catch(error => {console.log(error)});
+                                    }}
+                                    buttonColor={Colors.primary}
+                                    textColor={Colors.background}
+                                >Trigger Tasks</Button>
                             </ListItem.Content>
                         </ListItem>
                         <ListItem key="buildVersion" bottomDivider>
