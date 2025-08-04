@@ -8,6 +8,7 @@ import SettingsService from "@/providers/SettingsService";
 import { Dropdown } from 'react-native-element-dropdown';
 import {ListItem} from "react-native-elements";
 import Colors from "@/components/colorPalette";
+import * as Application from 'expo-application';
 
 export default function SettingsPage() {
     const {signOut} = useAuthSession();
@@ -209,12 +210,19 @@ export default function SettingsPage() {
                             <ListItem.Content>
                                 <ListItem.Title>Send Location Ping to Server</ListItem.Title>
                                     <Button
-                                        style={{marginBottom: 30}}
                                         mode="contained-tonal"
                                         onPress={locationSession.sendLocationPing}
                                         buttonColor={Colors.primary}
                                         textColor={Colors.background}
                                     >Location Ping</Button>
+                            </ListItem.Content>
+                        </ListItem>
+                        <ListItem key="buildVersion" bottomDivider>
+                            <ListItem.Content>
+                                <ListItem.Title>Pocket Watch Version</ListItem.Title>
+                                <Text
+                                    style={{marginBottom: 30}}
+                                >Build Version: {Application.nativeApplicationVersion}</Text>
                             </ListItem.Content>
                         </ListItem>
                     </View>
