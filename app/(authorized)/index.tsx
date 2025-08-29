@@ -21,8 +21,6 @@ export default function HomePage(){
         locationSession.resyncLocationServices();
     }
 
-    // @ts-ignore
-    let tokenVal = token?.current.token;
     const pocketWatchUrl = settingsService.getSettingValue("url") + "/api/watchFace";
 
     return (
@@ -75,7 +73,8 @@ export default function HomePage(){
                     source={{
                         uri: pocketWatchUrl,
                         headers: {
-                            "Authorization": "Bearer " + tokenVal,
+                            // @ts-ignore
+                            "Authorization": "Bearer " + token?.current.token,
                         }
                     }}
                     onHttpError={(syntheticEvent) => {
@@ -83,8 +82,7 @@ export default function HomePage(){
                     }}
                     cacheEnabled={false}
                     scrollEnabled={false}
-                    cachePolicy="LOAD_NO_CACHE"
-                    priority="high"
+                    cacheMode="LOAD_NO_CACHE"
                     setBuiltInZoomControls={false}
                 >
                 </WebView>
