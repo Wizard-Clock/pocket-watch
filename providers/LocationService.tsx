@@ -1,12 +1,13 @@
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 import SettingsService from "@/providers/SettingsService"
-const settingsService = SettingsService.getInstance();
 import {useAuthSession} from "@/providers/AuthService";
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from "expo-secure-store";
+
+const settingsService = SettingsService.getInstance();
 const WC_API_TOKEN_KEY = 'portkey';
 
 const BACKGROUND_TASK_NAME = "DOBBY_TRACKING_SERVICE";
@@ -58,15 +59,17 @@ TaskManager.defineTask(HEARTBEAT_TASK_NAME, async (event) => {
 });
 
 const LocationContext = createContext<{
-    toggleLocationService: () => void
-    updateLocationConfig: () => void
-    sendLocationPing: () => void
-    resyncLocationServices: () => void
-    locationStarted: boolean
-    locationIcon: string
-    portalSnackbarVisible: boolean
-    portalSnackbarText: string
-    setPortalSnackbarVisible: (state:boolean) => void;
+    toggleLocationService: () => void,
+    updateLocationConfig: () => void,
+    sendLocationPing: () => void,
+    resyncLocationServices: () => void,
+    locationStarted: boolean,
+    locationIcon: string,
+    portalSnackbarVisible: boolean,
+    portalSnackbarText: string,
+    setPortalSnackbarVisible: (state:boolean) => void,
+    manualLocationModalVisible: boolean,
+    setManualLocationModalVisible: (state:boolean) => void
 }>({
     toggleLocationService: () => null,
     updateLocationConfig: () => null,
@@ -76,7 +79,9 @@ const LocationContext = createContext<{
     locationIcon: "play-circle",
     portalSnackbarVisible: false,
     portalSnackbarText: '',
-    setPortalSnackbarVisible: () => null
+    setPortalSnackbarVisible: () => null,
+    manualLocationModalVisible: false,
+    setManualLocationModalVisible: () => null
 });
 
 // Access the context as a hook
@@ -114,6 +119,7 @@ async function sendServerHealthCheck() {
 export default function LocationProvider({children}:{children: ReactNode}): ReactNode {
     const {token} = useAuthSession();
     const [locationIcon, setLocationIcon] = useState('play-circle');
+    const [manualLocationModalVisible, setManualLocationModalVisible] = useState(false);
     const [locationStarted, setLocationStarted] = useState(false);
     const [portalSnackbarVisible, setPortalSnackbarVisible] = useState(false);
     const [portalSnackbarText, setPortalSnackbarText] = useState("");
@@ -132,8 +138,12 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     });
 
     const resyncLocationServices = () => {
-        console.log("Sync location service state");
-        Location.hasStartedLocationUpdatesAsync(BACKGROUND_TASK_NAME).then((result) => {setLocationServiceState(result, false)});
+        if (settingsService.getSettingValue("locationReportingType") === "manual") {
+            setLocationIcon("map-marker-down");
+        } else {
+            console.log("Sync location service state");
+            Location.hasStartedLocationUpdatesAsync(BACKGROUND_TASK_NAME).then((result) => {setLocationServiceState(result, false)});
+        }
     }
 
     const handleSnackbar= (isVisible:boolean, text:string) => {
@@ -158,41 +168,45 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
     }
 
     const toggleLocationService = () => {
-        if (!TaskManager.isTaskDefined(BACKGROUND_TASK_NAME)) {
-            console.log("Task is not defined");
-            return;
-        }
-
-        console.log("Toggled location service");
-        setLocationIcon('swap-horizontal-circle');
-        Location.hasStartedLocationUpdatesAsync(BACKGROUND_TASK_NAME).then((isStarted) => {
-            if (isStarted) {
-                handleSnackbar(true, "Stopping Location Reporting.");
-                handleLocationHeartbeat(false);
-                Location.stopLocationUpdatesAsync(BACKGROUND_TASK_NAME)
-                    .then(() => setLocationServiceState(false, true));
-            } else {
-                handleSnackbar(true, "Starting Location Reporting.");
-                if (!Location.getBackgroundPermissionsAsync()) {
-                    console.log("location tracking denied: background permission denied.");
-                    Location.requestBackgroundPermissionsAsync();
-                    setLocationServiceState(false, true);
-                    return;
-                }
-                handleLocationHeartbeat(true);
-                Location.startLocationUpdatesAsync(BACKGROUND_TASK_NAME, {
-                    accuracy: settingsService.getSettingValue("desiredAccuracy"),
-                    timeInterval: settingsService.getSettingValue("timeInterval"),
-                    distanceInterval: settingsService.getSettingValue("distanceInterval"),
-                    showsBackgroundLocationIndicator: true,
-                    foregroundService: {
-                        notificationTitle: 'Dobby is Following',
-                        notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
-                        killServiceOnDestroy: false
-                    },
-                }).then(() => setLocationServiceState(true, true)).catch(e => console.error(e));
+        if (settingsService.getSettingValue("locationReportingType") === "manual") {
+            setManualLocationModalVisible(true);
+        } else {
+            if (!TaskManager.isTaskDefined(BACKGROUND_TASK_NAME)) {
+                console.log("Task is not defined");
+                return;
             }
-        });
+
+            console.log("Toggled location service");
+            setLocationIcon('swap-horizontal-circle');
+            Location.hasStartedLocationUpdatesAsync(BACKGROUND_TASK_NAME).then((isStarted) => {
+                if (isStarted) {
+                    handleSnackbar(true, "Stopping Location Reporting.");
+                    handleLocationHeartbeat(false);
+                    Location.stopLocationUpdatesAsync(BACKGROUND_TASK_NAME)
+                        .then(() => setLocationServiceState(false, true));
+                } else {
+                    handleSnackbar(true, "Starting Location Reporting.");
+                    if (!Location.getBackgroundPermissionsAsync()) {
+                        console.log("location tracking denied: background permission denied.");
+                        Location.requestBackgroundPermissionsAsync();
+                        setLocationServiceState(false, true);
+                        return;
+                    }
+                    handleLocationHeartbeat(true);
+                    Location.startLocationUpdatesAsync(BACKGROUND_TASK_NAME, {
+                        accuracy: settingsService.getSettingValue("desiredAccuracy"),
+                        timeInterval: settingsService.getSettingValue("timeInterval"),
+                        distanceInterval: settingsService.getSettingValue("distanceInterval"),
+                        showsBackgroundLocationIndicator: true,
+                        foregroundService: {
+                            notificationTitle: 'Dobby is Following',
+                            notificationBody: 'Location tracking from Pocket Watch is happening in the background.',
+                            killServiceOnDestroy: false
+                        },
+                    }).then(() => setLocationServiceState(true, true)).catch(e => console.error(e));
+                }
+            });
+        }
     }
 
     const setLocationServiceState = (value:boolean, effectSnackbar:boolean) => {
@@ -215,6 +229,7 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
 
     const updateLocationConfig = () => {
         console.log('Update location config');
+        console.log('reportingMethod: ' + settingsService.getSettingValue("locationReportingType"));
         console.log('desiredAccuracy: ' + settingsService.getSettingValue("desiredAccuracy"));
         console.log('timeInterval: ' + settingsService.getSettingValue("timeInterval"));
         console.log('distanceInterval: ' + settingsService.getSettingValue("distanceInterval"));
@@ -248,7 +263,9 @@ export default function LocationProvider({children}:{children: ReactNode}): Reac
                 locationIcon,
                 portalSnackbarVisible,
                 portalSnackbarText,
-                setPortalSnackbarVisible
+                setPortalSnackbarVisible,
+                manualLocationModalVisible,
+                setManualLocationModalVisible,
             }}
         >
             {children}

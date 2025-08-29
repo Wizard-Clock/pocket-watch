@@ -8,13 +8,17 @@ const APP_SETTINGS:any = {
     common: [
         {name: 'url', group: 'http', inputType: 'text', dataType: 'string', defaultValue: 'https://'},
         {name: 'username', group: 'hidden', inputType: 'text', dataType: 'string', defaultValue: ''},
+        {name: 'locationReportingType', group: 'reportType', dataType: 'string', inputType: 'select', values: [
+                {label: 'Automatic', value: 'auto'},
+                {label: 'Manual', value: 'manual'},
+            ], defaultValue: 'auto'},
         {name: 'desiredAccuracy', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: 'HIGHEST', value: Location.Accuracy.Highest},
                 {label: 'HIGH', value: Location.Accuracy.High},
                 {label: 'BALANCED', value: Location.Accuracy.Balanced},
                 {label: 'LOW', value: Location.Accuracy.Low},
                 {label: 'LOWEST', value: Location.Accuracy.Lowest},
-            ], defaultValue: Location.Accuracy.High },
+            ], defaultValue: Location.Accuracy.High},
         {name: 'distanceInterval', group: 'geolocation', dataType: 'integer', inputType: 'select', values: [
                 {label: '0 m', value: 0},
                 {label: '10 m', value: 10},

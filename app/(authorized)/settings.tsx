@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Appbar, Banner, Button, Portal, Snackbar, Switch, Text, TextInput} from 'react-native-paper'
 import {useRouter} from "expo-router";
 import {useAuthSession} from "@/providers/AuthService";
-import {SafeAreaView, ScrollView, View, Linking} from "react-native";
+import {SafeAreaView, ScrollView, View, Linking, Alert, Pressable, Modal} from "react-native";
 import {useLocationSession} from "@/providers/LocationService";
 import SettingsService from "@/providers/SettingsService";
 import { Dropdown } from 'react-native-element-dropdown';
@@ -12,7 +12,7 @@ import * as BackgroundTask from 'expo-background-task';
 import * as Application from 'expo-application';
 
 export default function SettingsPage() {
-    const {signOut} = useAuthSession();
+    const {signOut, token} = useAuthSession();
     const locationSession = useLocationSession();
     const settingsService = SettingsService.getInstance();
     const onLayout= () => {locationSession.resyncLocationServices()}
@@ -178,6 +178,45 @@ export default function SettingsPage() {
                             Location reporting must be off to update settings.
                         </Text>
                     </Banner>
+                    <Text>Reporting Type</Text>
+                    <View>
+                        <ListItem key={"locationReportingType"} bottomDivider>
+                            <ListItem.Content>
+                                <ListItem.Title>{"locationReportingType"}</ListItem.Title>
+                                <Dropdown
+                                    style={{
+                                        width:320,
+                                        height:40
+                                    }}
+                                    data={[
+                                        {label: 'Automatic', value: 'auto'},
+                                        {label: 'Manual', value: 'manual'}
+                                    ]}
+                                    labelField="label"
+                                    valueField="value"
+                                    value={settingsService.getSettingValue("locationReportingType")}
+                                    onChange={(selection) => {
+                                        onFieldChange("locationReportingType", selection.value);
+                                        let url = settingsService.getSettingValue("url") + "/api/updateUserReporting";
+                                        fetch(url, {
+                                            method: 'POST',
+                                            body: JSON.stringify({
+                                                reportingMethod: selection.value
+                                            }),
+                                            headers: {
+                                                // @ts-ignore
+                                                "Authorization": "Bearer " + token?.current.token,
+                                                "Content-Type": "application/json",
+                                            }
+
+                                        });
+                                        locationSession.resyncLocationServices();
+                                    }}
+                                    disable={locationSession.locationStarted}
+                                />
+                            </ListItem.Content>
+                        </ListItem>
+                    </View>
                     <Text>Geolocation</Text>
                     <View>
                         {renderPluginSettings('geolocation')}
