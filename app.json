@@ -3,7 +3,7 @@
     "name": "Pocket Watch",
     "description": "The companion app for the Wizarding Clock Project. Allows for user location reporting to the clock server.",
     "slug": "pocket-watch",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "platforms": [
       "ios",
       "android"
