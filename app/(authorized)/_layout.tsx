@@ -7,7 +7,7 @@ import LocationProvider from "@/providers/LocationService";
 import Colors from "@/components/colorPalette";
 
 export default function RootLayout(): ReactNode {
-    const {token, isLoading} = useAuthSession();
+    const {token, isLoading, isValidCredentials} = useAuthSession();
 
     if (isLoading) {
         return (
@@ -25,7 +25,7 @@ export default function RootLayout(): ReactNode {
         );
     }
 
-    if (!token?.current) {
+    if (!token?.current || !isValidCredentials) {
         return <Redirect href="/login" />;
     }
 

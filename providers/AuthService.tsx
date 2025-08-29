@@ -10,12 +10,14 @@ const AuthContext = createContext<{
     signIn: (url: string, username: string, password: string) => void;
     signOut: () => void
     token: RefObject<string | null> | null;
+    isValidCredentials: boolean
     isLoading: boolean
     genError: string
 }>({
     signIn: () => null,
     signOut: () => null,
     token: null,
+    isValidCredentials: false,
     isLoading: false,
     genError: "",
 });
@@ -29,12 +31,14 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
     const settingsService = SettingsService.getInstance();
     const tokenRef = useRef<string|null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isValidCredentials, setIsValidCredentials] = useState(true);
     const [genError, setGenError] = useState('');
 
     useEffect(() => {
         (async ():Promise<void> => {
             await SecureStore.getItemAsync(WC_API_TOKEN_KEY).then(result => {
                 if (result) {
+                    // @ts-ignore
                     tokenRef.current = {
                         token: result
                     };
@@ -42,6 +46,9 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                     tokenRef.current = '';
                 }
             });
+            if (tokenRef.current !== '') {
+                await verifyCredentials();
+            }
             setIsLoading(false);
         })()
     }, []);
@@ -82,9 +89,11 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                 tokenRef.current = jsonToken;
                 settingsService.set("url", url);
                 settingsService.set("username", username);
+                setIsValidCredentials(true);
                 setIsLoading(false);
                 router.replace('/');
             } else {
+                setIsValidCredentials(false);
                 switch (response.status) {
                     case 401:
                         setGenError('401: Invalid token.');
@@ -97,6 +106,7 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
                 router.replace('/login');
             }
         } catch (err) {
+            setIsValidCredentials(false);
             setIsLoading(false);
             if (err instanceof Error) {
                 console.log('error', err);
@@ -117,12 +127,38 @@ export default function AuthProvider({children}:{children: ReactNode}): ReactNod
         router.replace('/login');
     }, []);
 
+    const verifyCredentials = useCallback(async () => {
+        // @ts-ignore
+        let tokenVal = tokenRef?.current.token;
+        const response = await fetch(settingsService.getSettingValue("url") + "/api/credentialCheck", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': 'true',
+                "Authorization": "Bearer " + tokenVal
+            },
+            body: JSON.stringify({
+                username: settingsService.getSettingValue("username")
+            })
+        });
+
+        if (response.ok) {
+            setIsValidCredentials(true);
+            setGenError("");
+        } else {
+            setIsValidCredentials(false);
+            setGenError("Credentials Expired");
+        }
+    }, []);
+
     return (
         <AuthContext.Provider
             value={{
                 signIn,
                 signOut,
                 token: tokenRef,
+                isValidCredentials,
                 isLoading,
                 genError
             }}
